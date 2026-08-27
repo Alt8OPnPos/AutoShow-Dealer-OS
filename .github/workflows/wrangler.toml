@@ -1,8 +1,0 @@
-name = "autoshow-dealer-os"
-main = "worker.js"
-compatibility_date = "2026-08-27"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "dealer_os"
-database_id = "f0263076-679a-486a-abe7-233db65620ac"
