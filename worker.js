@@ -494,29 +494,54 @@ async function renderLandingPage(env) {
     </div>
   `).join("");
 
-  // Compact, inventory-forward hero: the pitch is the stock itself, so the
-  // headline states the real count and the filter bar sits right under it
-  // instead of a full-bleed photo/video block pushing the grid below the fold.
-  const hero = `
-    <div class="reveal" style="padding:36px 0 6px;">
-      <div class="eyebrow">Browse the floor</div>
-      <h1 style="font-size:clamp(28px,5vw,42px); margin:14px 0 10px; line-height:1.12;">${stock.length} car${stock.length === 1 ? "" : "s"} on the floor. Real prices, filter and go.</h1>
-      <p style="font-size:16px; max-width:56ch; line-height:1.6; color:var(--ink-soft); margin:0;">Updated daily, no waiting for a call back. Selling instead? <a href="/evaluate" style="color:var(--coral); font-weight:600;">Get a trade-in value &rarr;</a></p>
-    </div>
+  // Full-bleed video/photo hero (same hero-stage the rest of the site already
+  // ships - HERO_VIDEO_KEY plays if set, else the real floor-stock slideshow),
+  // with the price/gearbox filter bar overlapping its bottom edge as a glass
+  // "search bar" card, so the pitch and the inventory sit in one glance.
+  const heroVideoUrl = HERO_VIDEO_KEY ? `/photos/${encodeURIComponent(HERO_VIDEO_KEY)}` : "";
+  const heroMedia = heroVideoUrl
+    ? `<video class="hero-video" id="hero-video" autoplay muted loop playsinline preload="auto"${heroSlides[0] ? ` poster="${heroSlides[0]}"` : ""}>
+         <source src="${heroVideoUrl}" type="video/mp4">
+       </video>`
+    : heroSlides.length
+      ? `<div class="hero-bg">
+           ${heroSlides.map((src, i) => `<div class="hero-slide${i === 0 ? ' active' : ''}" style="background-image:url('${src}'); animation-delay:${(i * 0.6).toFixed(1)}s;"></div>`).join("")}
+         </div>`
+      : "";
+
+  const heroInner = `
+      <div class="eyebrow">Bloemfontein &middot; Quality Used Vehicles</div>
+      <h1 style="font-size:clamp(32px,6vw,50px); margin:0 0 14px; line-height:1.08;">Find your next car,<br>book a test drive today.</h1>
+      <p style="font-size:16px; max-width:50ch; line-height:1.6;">Real stock, updated daily. Filter below and book a time that works for you.</p>
   `;
 
+  const hero = heroMedia
+    ? `<div class="hero-stage has-photos" id="hero-stage" style="min-height:420px;">
+        ${heroMedia}
+        <div class="hero-overlay"></div>
+        <div class="hero-content" style="padding-bottom:78px;">${heroInner}</div>
+      </div>`
+    : `<div style="padding:44px 0 4px; position:relative;">
+        <div class="eyebrow">Bloemfontein &middot; Quality Used Vehicles</div>
+        <h1 style="font-size:clamp(30px,5.4vw,44px); margin:14px 0 10px; line-height:1.1;">Find your next car, book a test drive today.</h1>
+        <p style="font-size:16px; max-width:56ch; line-height:1.6; color:var(--ink-soft); margin:0;">Real stock, updated daily. Selling instead? <a href="/evaluate" style="color:var(--coral); font-weight:600;">Get a trade-in value &rarr;</a></p>
+      </div>`;
+
   const filterBar = `
-    <div class="reveal" style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin:22px 0 8px;">
-      <div class="filter-group" data-filter="price">
-        <button type="button" class="chip active" data-value="all">All prices</button>
-        <button type="button" class="chip" data-value="low">Under R150k</button>
-        <button type="button" class="chip" data-value="mid">R150k&ndash;R300k</button>
-        <button type="button" class="chip" data-value="high">R300k+</button>
-      </div>
-      <div class="filter-group" data-filter="transmission" style="margin-left:auto;">
-        <button type="button" class="chip active" data-value="all">Any gearbox</button>
-        <button type="button" class="chip" data-value="automatic">Automatic</button>
-        <button type="button" class="chip" data-value="manual">Manual</button>
+    <div class="card reveal" style="position:relative; z-index:5; margin-top:${heroMedia ? "-56px" : "20px"}; margin-bottom:30px; padding:20px 24px;">
+      <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center;">
+        <div class="filter-group" data-filter="price">
+          <button type="button" class="chip active" data-value="all">All prices</button>
+          <button type="button" class="chip" data-value="low">Under R150k</button>
+          <button type="button" class="chip" data-value="mid">R150k&ndash;R300k</button>
+          <button type="button" class="chip" data-value="high">R300k+</button>
+        </div>
+        <div class="filter-group" data-filter="transmission">
+          <button type="button" class="chip active" data-value="all">Any gearbox</button>
+          <button type="button" class="chip" data-value="automatic">Automatic</button>
+          <button type="button" class="chip" data-value="manual">Manual</button>
+        </div>
+        <span id="stock-count" style="margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft); white-space:nowrap;">${stock.length} of ${stock.length} vehicles</span>
       </div>
     </div>
   `;
@@ -528,9 +553,8 @@ async function renderLandingPage(env) {
       <div id="recently-viewed-list"></div>
     </div>
     ${filterBar}
-    <div class="reveal" style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px;">
+    <div class="reveal" style="margin-bottom:18px;">
       <h2 id="stock" style="font-size:26px; margin:0;">Current Stock</h2>
-      <span id="stock-count" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft);">${stock.length} of ${stock.length} vehicles</span>
     </div>
     <div id="stock-grid">
       ${stockCards || '<div class="card">No stock currently listed.</div>'}
