@@ -18,11 +18,9 @@
 const DEALER_ID = "autoshow-bloemfontein";
 const WHATSAPP_NUMBER = "27761021676"; // AutoShow's real WhatsApp number
 
-// R2 key of a video to autoplay muted/looped behind the hero, e.g.
-// "floor-walkthrough.mp4" - set once the real file is uploaded to the
-// autoshow-vehicle-photos bucket. Leave "" to fall back to the photo
-// slideshow only.
-const HERO_VIDEO_KEY = "";
+// R2 key of a video to autoplay muted/looped behind the hero. Leave ""
+// to fall back to the photo slideshow only.
+const HERO_VIDEO_KEY = "YTShort_27Aug2026_13_41_13.mp4";
 
 const BRAND = {
   paper: "#FBF8F3",
