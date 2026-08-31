@@ -187,8 +187,6 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     border-bottom: 1px solid transparent; transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
   header.scrolled { border-bottom-color: var(--line); box-shadow: 0 4px 20px rgba(43,38,32,0.05); }
-  .logo { font-family: 'Fraunces', serif; font-weight: 700; font-size: 21px; text-decoration: none; color: var(--ink); letter-spacing: -0.01em; }
-  .logo span { color: var(--coral); }
   nav a {
     font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
     letter-spacing: 0.06em; color: var(--ink-soft); text-decoration: none; margin-left: 20px;
@@ -243,17 +241,18 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   input:focus, select:focus, textarea:focus { border-color: var(--sage); }
   label { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); display: block; margin-bottom: 6px; }
 
-  /* Generated brand mark - a moving gradient sweep through the palette,
-     re-angled per page load, instead of a flat static wordmark. */
+  /* Generated brand mark - an ink wordmark with a coral gleam that sweeps
+     across it, re-angled per page load. Coral stays the only accent, same
+     as the static dot always was - this is motion, not a new palette. */
   .logo-mark {
     font-family: 'Fraunces', serif; font-weight: 700; font-size: 21px; text-decoration: none;
-    letter-spacing: -0.01em; display: inline-block; background-size: 260% auto;
-    background-image: linear-gradient(var(--logo-angle, 90deg), var(--ink) 0%, var(--coral) 30%, var(--gold) 55%, var(--sage) 80%, var(--ink) 100%);
-    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
-    animation: logoShine 8s linear infinite;
+    letter-spacing: -0.01em; display: inline-block; background-size: 220% auto; color: var(--ink);
+    background-image: linear-gradient(var(--logo-angle, 100deg), var(--ink) 0%, var(--ink) 42%, var(--coral) 50%, var(--ink) 58%, var(--ink) 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    animation: logoShine 6s ease-in-out infinite;
   }
   .logo-mark .dot { -webkit-text-fill-color: var(--coral); color: var(--coral); }
-  @keyframes logoShine { to { background-position: 260% 50%; } }
+  @keyframes logoShine { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
   @media (prefers-reduced-motion: reduce) { .logo-mark { animation: none; } }
 
   /* Scroll-reveal: sections and cards ease in as they enter view, so
@@ -291,11 +290,11 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     position: absolute; inset: 0; z-index: 1;
     background: linear-gradient(180deg, rgba(43,38,32,0.10) 0%, rgba(43,38,32,0.5) 72%, rgba(43,38,32,0.78) 100%);
   }
-  .hero-content { position: relative; z-index: 2; padding: 44px clamp(20px,4vw,48px); color: #fff; width: 100%; }
+  .hero-content { position: relative; z-index: 2; padding: 44px clamp(20px,4vw,48px); color: var(--paper); width: 100%; }
   .hero-content .eyebrow { color: var(--gold); }
-  .hero-content h1 { color: #fff; }
-  .hero-content p { color: rgba(255,255,255,0.88); }
-  .hero-content .stat-strip span { color: rgba(255,255,255,0.78); }
+  .hero-content h1 { color: var(--paper); }
+  .hero-content p { color: rgba(251,248,243,0.88); }
+  .hero-content .stat-strip span { color: rgba(251,248,243,0.78); }
   @media (prefers-reduced-motion: reduce) {
     .hero-slide { animation: none; transition: opacity 0.4s ease; }
     .hero-bg { transition: none !important; transform: none !important; }
