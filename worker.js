@@ -154,25 +154,77 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
       var(--paper);
     min-height: 100vh; padding-bottom: 60px;
   }
-  header { max-width: 1100px; margin: 0 auto; padding: 24px 20px; display: flex; justify-content: space-between; align-items: center; }
-  .logo { font-family: 'Fraunces', serif; font-weight: 700; font-size: 20px; text-decoration: none; color: var(--ink); }
-  .logo span { color: var(--coral); }
-  nav a { font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; color: var(--ink-soft); text-decoration: none; margin-left: 18px; }
-  main { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
-  h1 { font-family: 'Fraunces', serif; font-weight: 600; }
-  .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--coral); font-weight: 600; margin-bottom: 8px; }
-  .btn { display: inline-block; font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 14px; padding: 12px 22px; border-radius: 12px; text-decoration: none; border: none; cursor: pointer; }
-  .btn-primary { background: var(--sage); color: white; }
-  .btn-whatsapp { background: #22c55e; color: white; }
-  .btn-outline { background: var(--glass); color: var(--ink); border: 1px solid var(--line); }
-  .card { background: var(--glass); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); border-radius: 16px; padding: 20px; margin-bottom: 14px; }
-  input, select, textarea {
-    width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line);
-    background: var(--glass); font-family: 'Manrope', sans-serif; font-size: 14px; margin-bottom: 12px;
+  header {
+    max-width: 1100px; margin: 0 auto; padding: 20px; display: flex;
+    justify-content: space-between; align-items: center;
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(251,248,243,0.85); backdrop-filter: blur(14px);
+    border-bottom: 1px solid transparent; transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
-  label { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; color: var(--ink-soft); display: block; margin-bottom: 6px; }
+  header.scrolled { border-bottom-color: var(--line); box-shadow: 0 4px 20px rgba(43,38,32,0.05); }
+  .logo { font-family: 'Fraunces', serif; font-weight: 700; font-size: 21px; text-decoration: none; color: var(--ink); letter-spacing: -0.01em; }
+  .logo span { color: var(--coral); }
+  nav a {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--ink-soft); text-decoration: none; margin-left: 20px;
+    transition: color 0.15s ease; padding-bottom: 2px; border-bottom: 1px solid transparent;
+  }
+  nav a:hover { color: var(--coral); border-bottom-color: var(--coral); }
+  main { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+  h1 { font-family: 'Fraunces', serif; font-weight: 600; letter-spacing: -0.015em; }
+  h2 { font-family: 'Fraunces', serif; font-weight: 600; letter-spacing: -0.01em; }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--coral); font-weight: 600; margin-bottom: 10px;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; font-family: 'Manrope', sans-serif;
+    font-weight: 700; font-size: 14px; padding: 13px 24px; border-radius: 12px;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn-primary { background: var(--sage); color: white; box-shadow: 0 4px 14px rgba(127,160,132,0.3); }
+  .btn-primary:hover { box-shadow: 0 6px 18px rgba(127,160,132,0.4); }
+  .btn-whatsapp { background: #22c55e; color: white; box-shadow: 0 4px 14px rgba(34,197,94,0.28); }
+  .btn-whatsapp:hover { box-shadow: 0 6px 18px rgba(34,197,94,0.38); }
+  .btn-outline { background: var(--glass); color: var(--ink); border: 1px solid var(--line); }
+  .btn-outline:hover { border-color: var(--ink-soft); background: rgba(255,255,255,0.85); }
+  .card {
+    background: var(--glass); border: 1px solid var(--glass-border); backdrop-filter: blur(10px);
+    border-radius: 18px; padding: 22px; margin-bottom: 14px;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(43,38,32,0.07); border-color: rgba(255,255,255,0.9); }
+  .vehicle-image-placeholder {
+    aspect-ratio: 16/9; border-radius: 12px; margin-bottom: 16px;
+    background:
+      repeating-linear-gradient(135deg, rgba(43,38,32,0.03) 0px, rgba(43,38,32,0.03) 2px, transparent 2px, transparent 14px),
+      linear-gradient(135deg, rgba(226,137,111,0.10), rgba(239,195,102,0.10));
+    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px;
+    border: 1px solid var(--line);
+  }
+  .vehicle-image-placeholder svg { opacity: 0.35; width: 40px; height: 40px; }
+  .vehicle-image-placeholder span {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--ink-soft); opacity: 0.6;
+  }
+  input, select, textarea {
+    width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid var(--line);
+    background: rgba(255,255,255,0.7); font-family: 'Manrope', sans-serif; font-size: 15px; margin-bottom: 12px;
+    transition: border-color 0.15s ease;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--sage); }
+  label { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); display: block; margin-bottom: 6px; }
   ${extraHead}
 </style>
+<script>
+  window.addEventListener('scroll', () => {
+    const h = document.querySelector('header');
+    if (h) h.classList.toggle('scrolled', window.scrollY > 8);
+  }, { passive: true });
+</script>
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -208,18 +260,27 @@ function jsonResponse(data, status = 200) {
 async function renderLandingPage(env) {
   const stock = await getStock(env);
 
+  const carIconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 17h14M5 17a2 2 0 100 4 2 2 0 000-4zm14 0a2 2 0 100 4 2 2 0 000-4zM5 17V9l2-5h10l2 5v8"/></svg>`;
+
+  const vehicleMedia = (s) => s.photo_urls
+    ? `<a href="/vehicle/${s.stock_id}"><img src="${s.photo_urls}" alt="${s.year} ${s.make} ${s.model}" loading="lazy" style="width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; margin-bottom:16px; display:block;"></a>`
+    : `<a href="/vehicle/${s.stock_id}" style="text-decoration:none;"><div class="vehicle-image-placeholder">${carIconSvg}<span>Photo coming soon</span></div></a>`;
+
+  const mileageText = (s) => s.mileage ? `${s.mileage.toLocaleString()} km &middot; ` : "";
+
   const stockCards = stock.map(s => `
     <div class="card">
+      ${vehicleMedia(s)}
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
         <div>
-          <div style="font-weight:700; font-size:16px;">${s.year} ${s.make} ${s.model}</div>
+          <div style="font-weight:700; font-size:17px;"><a href="/vehicle/${s.stock_id}" style="color:inherit; text-decoration:none;">${s.year} ${s.make} ${s.model}</a></div>
           <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft); margin-top:4px;">
-            ${s.mileage.toLocaleString()} km &middot; ${s.transmission} &middot; ${s.fuel_type}
+            ${mileageText(s)}${s.transmission} &middot; ${s.fuel_type}
           </div>
         </div>
         <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; background:${s.status === 'available' ? 'rgba(127,160,132,0.22)' : 'rgba(239,195,102,0.28)'}; color:${s.status === 'available' ? '#3F5C43' : '#7A5B12'};">${s.status}</span>
       </div>
-      <div style="font-family:'Fraunces',serif; font-weight:600; font-size:20px; color:var(--sage); margin:10px 0;">R ${Number(s.retail_price).toLocaleString()}</div>
+      <div style="font-family:'Fraunces',serif; font-weight:600; font-size:22px; color:var(--sage); margin:10px 0;">R ${Number(s.retail_price).toLocaleString()}</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <a href="/test-drive?stock_id=${s.stock_id}" class="btn btn-primary">Book Test Drive</a>
         <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi, I'm interested in the ${s.year} ${s.make} ${s.model} - is it still available?`)}" class="btn btn-whatsapp">WhatsApp Us</a>
@@ -228,21 +289,42 @@ async function renderLandingPage(env) {
   `).join("");
 
   const body = `
-    <div style="padding:40px 0 20px;">
+    <div style="padding:56px 0 32px; position:relative;">
       <div class="eyebrow">Bloemfontein &middot; Quality Used Vehicles</div>
-      <h1 style="font-size:clamp(32px,6vw,48px); margin:0 0 12px;">Find your next car,<br>book a test drive today.</h1>
-      <p style="color:var(--ink-soft); font-size:16px; max-width:60ch;">Real stock, updated daily. No forms, no waiting for a call back - pick a car and book a time that works for you.</p>
-      <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
+      <h1 style="font-size:clamp(34px,7vw,54px); margin:0 0 16px; line-height:1.06;">Find your next car,<br>book a test drive today.</h1>
+      <p style="color:var(--ink-soft); font-size:17px; max-width:52ch; line-height:1.6;">Real stock, updated daily. No forms, no waiting for a call back &mdash; pick a car and book a time that works for you.</p>
+      <div style="display:flex; gap:12px; margin-top:26px; flex-wrap:wrap;">
         <a href="#stock" class="btn btn-primary">View Stock</a>
         <a href="/evaluate" class="btn btn-outline">Sell or Trade In Your Car</a>
       </div>
+      <div style="display:flex; gap:20px; margin-top:36px; flex-wrap:wrap; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em;">
+        <span>&#9679; ${stock.filter(s => s.status === 'available').length} vehicles available</span>
+        <span>&#9679; Updated daily</span>
+        <span>&#9679; No hidden fees</span>
+      </div>
     </div>
-    <div id="recently-viewed-section" style="display:none;">
-      <h2 style="font-family:'Fraunces',serif;">Recently Viewed</h2>
+    <div id="recently-viewed-section" style="display:none; margin-top:20px;">
+      <h2 style="font-size:20px;">Recently Viewed</h2>
       <div id="recently-viewed-list"></div>
     </div>
-    <h2 id="stock" style="font-family:'Fraunces',serif; margin-top:30px;">Current Stock</h2>
+    <div style="display:flex; align-items:baseline; justify-content:space-between; margin-top:40px; margin-bottom:18px;">
+      <h2 id="stock" style="font-size:26px; margin:0;">Current Stock</h2>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft);">${stock.length} vehicles</span>
+    </div>
     ${stockCards || '<div class="card">No stock currently listed.</div>'}
+
+    <div style="margin-top:48px;">
+      <h2 style="font-size:24px; margin-bottom:6px;">Real Customers, Real Handovers</h2>
+      <p style="color:var(--ink-soft); font-size:14px; margin-top:0; max-width:56ch;">Every AutoShow sale ends with keys in hand, not just a receipt. Ask us for references from any of these buyers.</p>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:16px;">
+        ${[1,2,3,4].map(() => `
+          <div class="vehicle-image-placeholder" style="aspect-ratio:1;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+            <span>Customer photo</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
 
     <div class="card" style="text-align:center; margin-top:30px;">
       <p style="margin-top:0;">Know someone looking for a car?</p>
@@ -310,10 +392,11 @@ async function renderVehiclePage(path, env, url) {
 
   const body = `
     <div class="card" style="margin-top:30px;">
+      ${item.photo_urls ? `<img src="${item.photo_urls}" alt="${vehicleTitle}" style="width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; margin-bottom:18px;">` : ""}
       <div class="eyebrow">${item.condition}</div>
       <h1>${vehicleTitle}</h1>
       <div style="font-family:'Fraunces',serif; font-size:26px; color:var(--sage); font-weight:600; margin:10px 0;">R ${price.toLocaleString()}</div>
-      <p style="color:var(--ink-soft);">${item.mileage.toLocaleString()} km &middot; ${item.transmission} &middot; ${item.fuel_type} &middot; ${item.location}</p>
+      <p style="color:var(--ink-soft);">${item.mileage ? item.mileage.toLocaleString() + ' km &middot; ' : ''}${item.transmission} &middot; ${item.fuel_type} &middot; ${item.location}</p>
       <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
         <a href="/test-drive?stock_id=${item.stock_id}" class="btn btn-primary" aria-label="Book a test drive for this ${vehicleTitle}">Book Test Drive</a>
         <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi, I'm interested in the ${vehicleTitle}`)}" class="btn btn-whatsapp" aria-label="Contact us on WhatsApp about this vehicle">WhatsApp Us</a>
@@ -379,7 +462,7 @@ async function renderVehiclePage(path, env, url) {
   `;
   return new Response(pageShell(vehicleTitle, body, "", {
     ogTitle: vehicleTitle,
-    ogDescription: `R ${price.toLocaleString()} - ${item.mileage.toLocaleString()}km ${item.transmission} ${item.fuel_type}`,
+    ogDescription: `R ${price.toLocaleString()} - ${item.mileage ? item.mileage.toLocaleString() + 'km ' : ''}${item.transmission} ${item.fuel_type}`,
     ogUrl: url.toString(),
   }), { headers: { "Content-Type": "text/html" } });
 }
