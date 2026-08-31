@@ -18,17 +18,24 @@
 const DEALER_ID = "autoshow-bloemfontein";
 const WHATSAPP_NUMBER = "27761021676"; // AutoShow's real WhatsApp number
 
-// R2 key of a video to autoplay muted/looped behind the hero. Leave ""
-// to fall back to the photo slideshow only.
-const HERO_VIDEO_KEY = "YTShort_27Aug2026_13_41_13.mp4";
+// R2 keys of videos to autoplay muted/looped behind the hero as a
+// crossfading slideshow at reduced opacity. Upload these exact files to R2
+// (dashboard -> autoshow-vehicle-photos -> Upload) with these exact names -
+// no code change needed after that. Leave the array empty to fall back to
+// the real floor-stock photo slideshow instead.
+const HERO_VIDEO_KEYS = [
+  "500930063_1788189877930701.mp4",
+  "691950586_1788189700216226.mp4",
+];
 
+// AutoShow brand: red/black/blue.
 const BRAND = {
-  paper: "#FBF8F3",
-  ink: "#2B2620",
-  inkSoft: "#6B6357",
-  coral: "#E2896F",
-  gold: "#EFC366",
-  sage: "#7FA084",
+  paper: "#F6F6F8",
+  ink: "#121212",
+  inkSoft: "#5C5D63",
+  coral: "#E31E2B", // red
+  gold: "#2B63EB", // blue (bright accent)
+  sage: "#123E91", // blue (deep, primary actions)
 };
 
 export default {
@@ -211,8 +218,8 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   body {
     margin: 0; font-family: 'Manrope', sans-serif; color: var(--ink);
     background:
-      radial-gradient(circle at 15% 8%, rgba(239,195,102,0.14), transparent 45%),
-      radial-gradient(circle at 90% 20%, rgba(226,137,111,0.12), transparent 40%),
+      radial-gradient(circle at 15% 8%, rgba(43,99,235,0.12), transparent 45%),
+      radial-gradient(circle at 90% 20%, rgba(227,30,43,0.10), transparent 40%),
       var(--paper);
     min-height: 100vh; padding-bottom: 60px;
   }
@@ -245,8 +252,8 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   }
   .btn:hover { transform: translateY(-1px); }
   .btn:active { transform: translateY(0); }
-  .btn-primary { background: var(--sage); color: white; box-shadow: 0 4px 14px rgba(127,160,132,0.3); }
-  .btn-primary:hover { box-shadow: 0 6px 18px rgba(127,160,132,0.4); }
+  .btn-primary { background: var(--sage); color: white; box-shadow: 0 4px 14px rgba(18,62,145,0.3); }
+  .btn-primary:hover { box-shadow: 0 6px 18px rgba(18,62,145,0.4); }
   .btn-whatsapp { background: #22c55e; color: white; box-shadow: 0 4px 14px rgba(34,197,94,0.28); }
   .btn-whatsapp:hover { box-shadow: 0 6px 18px rgba(34,197,94,0.38); }
   .btn-outline { background: var(--glass); color: var(--ink); border: 1px solid var(--line); }
@@ -261,7 +268,7 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     aspect-ratio: 16/9; border-radius: 12px; margin-bottom: 16px;
     background:
       repeating-linear-gradient(135deg, rgba(43,38,32,0.03) 0px, rgba(43,38,32,0.03) 2px, transparent 2px, transparent 14px),
-      linear-gradient(135deg, rgba(226,137,111,0.10), rgba(239,195,102,0.10));
+      linear-gradient(135deg, rgba(227,30,43,0.08), rgba(43,99,235,0.08));
     display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px;
     border: 1px solid var(--line);
   }
@@ -485,7 +492,7 @@ async function renderLandingPage(env) {
             ${mileageText(s)}${s.transmission} &middot; ${s.fuel_type}
           </div>
         </div>
-        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; background:${s.status === 'available' ? 'rgba(127,160,132,0.22)' : 'rgba(239,195,102,0.28)'}; color:${s.status === 'available' ? '#3F5C43' : '#7A5B12'};">${s.status}</span>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; background:${s.status === 'available' ? 'rgba(18,62,145,0.16)' : 'rgba(227,30,43,0.14)'}; color:${s.status === 'available' ? '#123E91' : '#8C1620'};">${s.status}</span>
       </div>
       <div style="font-family:'Fraunces',serif; font-weight:600; font-size:22px; color:var(--sage); margin:10px 0;">R ${Number(s.retail_price).toLocaleString()}</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -495,15 +502,18 @@ async function renderLandingPage(env) {
     </div>
   `).join("");
 
-  // Full-bleed video/photo hero (same hero-stage the rest of the site already
-  // ships - HERO_VIDEO_KEY plays if set, else the real floor-stock slideshow),
-  // with the price/gearbox filter bar overlapping its bottom edge as a glass
-  // "search bar" card, so the pitch and the inventory sit in one glance.
-  const heroVideoUrl = HERO_VIDEO_KEY ? `/photos/${encodeURIComponent(HERO_VIDEO_KEY)}` : "";
-  const heroMedia = heroVideoUrl
-    ? `<video class="hero-video" id="hero-video" autoplay muted loop playsinline preload="auto"${heroSlides[0] ? ` poster="${heroSlides[0]}"` : ""}>
-         <source src="${heroVideoUrl}" type="video/mp4">
-       </video>`
+  // Full-bleed hero (same hero-stage the rest of the site already ships).
+  // Videos in HERO_VIDEO_KEYS play as a silent, crossfading, reduced-opacity
+  // background slideshow; falls back to the real floor-stock photo
+  // slideshow if no video keys are configured.
+  const heroVideoSlides = HERO_VIDEO_KEYS.map((key, i) => `
+    <video class="hero-video-slide${i === 0 ? " active" : ""}" muted loop playsinline preload="${i === 0 ? "auto" : "none"}"${i === 0 && heroSlides[0] ? ` poster="${heroSlides[0]}"` : ""}>
+      <source src="/photos/${encodeURIComponent(key)}" type="video/mp4">
+    </video>
+  `).join("");
+
+  const heroMedia = HERO_VIDEO_KEYS.length
+    ? `<div class="hero-video-stack">${heroVideoSlides}</div>`
     : heroSlides.length
       ? `<div class="hero-bg">
            ${heroSlides.map((src, i) => `<div class="hero-slide${i === 0 ? ' active' : ''}" style="background-image:url('${src}'); animation-delay:${(i * 0.6).toFixed(1)}s;"></div>`).join("")}
@@ -631,6 +641,36 @@ async function renderLandingPage(env) {
     </script>
 
     <script>
+      // Silent hero video slideshow - crossfades between clips, pausing
+      // whichever isn't visible so only one plays (and downloads) at a time.
+      (function () {
+        const slides = Array.from(document.querySelectorAll('.hero-video-slide'));
+        if (!slides.length) return;
+
+        if (prefersReducedMotion) {
+          slides.forEach((v) => { v.pause(); v.removeAttribute('autoplay'); });
+          return;
+        }
+
+        slides[0].play().catch(() => {});
+        if (slides.length < 2) return;
+
+        let i = 0;
+        setInterval(() => {
+          const current = slides[i];
+          i = (i + 1) % slides.length;
+          const next = slides[i];
+          next.preload = 'auto';
+          next.currentTime = 0;
+          next.play().catch(() => {});
+          next.classList.add('active');
+          current.classList.remove('active');
+          setTimeout(() => current.pause(), 1900);
+        }, 14000);
+      })();
+    </script>
+
+    <script>
       // Search form - everything needed is already on the page, so filtering
       // just toggles card visibility instead of a re-fetch.
       (function () {
@@ -677,7 +717,7 @@ async function renderLandingPage(env) {
   .hero-wrap { position: relative; }
   .diagonal-accent {
     position: absolute; top: -48px; right: -70px; width: 52%; height: 135%;
-    background: linear-gradient(135deg, rgba(226,137,111,0.55) 0%, rgba(239,195,102,0.4) 55%, transparent 100%);
+    background: linear-gradient(135deg, rgba(227,30,43,0.6) 0%, rgba(43,99,235,0.42) 55%, transparent 100%);
     clip-path: polygon(28% 0, 100% 0, 100% 100%, 0% 100%);
     filter: blur(46px); z-index: 0; pointer-events: none;
     animation: materialize 1.4s cubic-bezier(0.16,1,0.3,1) both, drift 11s ease-in-out 1.4s infinite;
@@ -687,6 +727,16 @@ async function renderLandingPage(env) {
     -webkit-mask-image: radial-gradient(ellipse 92% 90% at 50% 58%, #000 60%, transparent 100%);
     mask-image: radial-gradient(ellipse 92% 90% at 50% 58%, #000 60%, transparent 100%);
   }
+
+  /* Silent background video slideshow - crossfades between clips at a
+     deliberately lowered opacity so it reads as atmosphere, not footage. */
+  .hero-video-stack { position: absolute; inset: 0; z-index: 0; }
+  .hero-video-slide {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    opacity: 0; transition: opacity 1.8s ease; z-index: 0;
+  }
+  .hero-video-slide.active { opacity: 0.55; z-index: 1; }
+
   @keyframes drift {
     0%, 100% { transform: translate(0,0) scale(1); opacity: 0.9; }
     50% { transform: translate(-12px, 14px) scale(1.05); opacity: 1; }
@@ -871,7 +921,7 @@ async function renderBookingPage(type, url, env) {
   let vehicleContext = "";
   if (isTestDrive && stockId) {
     const item = await getStockItem(stockId, env);
-    if (item) vehicleContext = `<div class="card" style="background:rgba(127,160,132,0.12);">Booking for: <strong>${item.year} ${item.make} ${item.model}</strong></div>`;
+    if (item) vehicleContext = `<div class="card" style="background:rgba(18,62,145,0.10);">Booking for: <strong>${item.year} ${item.make} ${item.model}</strong></div>`;
   }
 
   const body = `
