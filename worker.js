@@ -341,7 +341,7 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   }
   ${extraHead}
 </style>
-<noscript><style>.reveal { opacity: 1 !important; transform: none !important; }</style></noscript>
+<noscript><style>.reveal, .materialize { opacity: 1 !important; transform: none !important; filter: none !important; }</style></noscript>
 <script>
   window.addEventListener('scroll', () => {
     const h = document.querySelector('header');
@@ -470,12 +470,13 @@ async function renderLandingPage(env) {
   }
   const heroSlides = heroPhotos.slice(0, 8);
 
-  // Buckets/keys the filter bar below matches against - client-side only,
+  // Buckets/keys the search form below matches against - client-side only,
   // no new API needed since the whole stock list is already on the page.
   const priceBucket = (price) => price < 150000 ? "low" : price < 300000 ? "mid" : "high";
+  const uniqueMakes = [...new Set(stock.map(s => s.make).filter(Boolean))].sort();
 
   const stockCards = stock.map(s => `
-    <div class="card tilt-card reveal stock-card" data-price="${priceBucket(Number(s.retail_price))}" data-transmission="${(s.transmission || "").toLowerCase()}">
+    <div class="card tilt-card reveal stock-card" data-make="${(s.make || "").toLowerCase()}" data-price="${priceBucket(Number(s.retail_price))}" data-transmission="${(s.transmission || "").toLowerCase()}">
       ${vehicleMedia(s)}
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
         <div>
@@ -510,39 +511,60 @@ async function renderLandingPage(env) {
       : "";
 
   const heroInner = `
-      <div class="eyebrow">Bloemfontein &middot; Quality Used Vehicles</div>
-      <h1 style="font-size:clamp(32px,6vw,50px); margin:0 0 14px; line-height:1.08;">Find your next car,<br>book a test drive today.</h1>
-      <p style="font-size:16px; max-width:50ch; line-height:1.6;">Real stock, updated daily. Filter below and book a time that works for you.</p>
+      <div class="eyebrow materialize" style="animation-delay:0.1s;">Bloemfontein &middot; Quality Used Vehicles</div>
+      <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(32px,6vw,50px); margin:0 0 14px; line-height:1.08;">Find your next car,<br>book a test drive today.</h1>
+      <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:50ch; line-height:1.6;">Real stock, updated daily. Search below and book a time that works for you.</p>
   `;
 
+  // The diagonal wash behind the hero is a soft brand-colour gradient, not a
+  // flat shape - it bleeds out past the hero's own edges, which are masked
+  // to dissolve rather than clipped to a hard box.
   const hero = heroMedia
-    ? `<div class="hero-stage has-photos" id="hero-stage" style="min-height:420px;">
-        ${heroMedia}
-        <div class="hero-overlay"></div>
-        <div class="hero-content" style="padding-bottom:78px;">${heroInner}</div>
+    ? `<div class="hero-wrap">
+        <div class="diagonal-accent materialize" style="animation-delay:0s;" aria-hidden="true"></div>
+        <div class="hero-stage has-photos" id="hero-stage" style="min-height:420px;">
+          ${heroMedia}
+          <div class="hero-overlay"></div>
+          <div class="hero-content" style="padding-bottom:88px;">${heroInner}</div>
+        </div>
       </div>`
-    : `<div style="padding:44px 0 4px; position:relative;">
-        <div class="eyebrow">Bloemfontein &middot; Quality Used Vehicles</div>
-        <h1 style="font-size:clamp(30px,5.4vw,44px); margin:14px 0 10px; line-height:1.1;">Find your next car, book a test drive today.</h1>
-        <p style="font-size:16px; max-width:56ch; line-height:1.6; color:var(--ink-soft); margin:0;">Real stock, updated daily. Selling instead? <a href="/evaluate" style="color:var(--coral); font-weight:600;">Get a trade-in value &rarr;</a></p>
+    : `<div class="hero-wrap" style="padding:44px 0 4px; position:relative;">
+        <div class="diagonal-accent materialize" style="animation-delay:0s;" aria-hidden="true"></div>
+        <div class="eyebrow materialize" style="animation-delay:0.1s;">Bloemfontein &middot; Quality Used Vehicles</div>
+        <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(30px,5.4vw,44px); margin:14px 0 10px; line-height:1.1;">Find your next car, book a test drive today.</h1>
+        <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:56ch; line-height:1.6; color:var(--ink-soft); margin:0;">Real stock, updated daily. Selling instead? <a href="/evaluate" style="color:var(--coral); font-weight:600;">Get a trade-in value &rarr;</a></p>
       </div>`;
 
   const filterBar = `
-    <div class="card reveal" style="position:relative; z-index:5; margin-top:${heroMedia ? "-56px" : "20px"}; margin-bottom:30px; padding:20px 24px;">
-      <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center;">
-        <div class="filter-group" data-filter="price">
-          <button type="button" class="chip active" data-value="all">All prices</button>
-          <button type="button" class="chip" data-value="low">Under R150k</button>
-          <button type="button" class="chip" data-value="mid">R150k&ndash;R300k</button>
-          <button type="button" class="chip" data-value="high">R300k+</button>
+    <div class="card materialize hero-search" style="animation-delay:0.55s; position:relative; z-index:5; margin-top:${heroMedia ? "-64px" : "20px"}; margin-bottom:32px; padding:24px 26px;">
+      <div class="search-form">
+        <div class="search-field">
+          <label for="f-make">Make</label>
+          <select id="f-make" data-filter="make">
+            <option value="all">All makes</option>
+            ${uniqueMakes.map(m => `<option value="${m.toLowerCase()}">${m}</option>`).join("")}
+          </select>
         </div>
-        <div class="filter-group" data-filter="transmission">
-          <button type="button" class="chip active" data-value="all">Any gearbox</button>
-          <button type="button" class="chip" data-value="automatic">Automatic</button>
-          <button type="button" class="chip" data-value="manual">Manual</button>
+        <div class="search-field">
+          <label for="f-price">Price Range</label>
+          <select id="f-price" data-filter="price">
+            <option value="all">Any price</option>
+            <option value="low">Under R150k</option>
+            <option value="mid">R150k&ndash;R300k</option>
+            <option value="high">R300k+</option>
+          </select>
         </div>
-        <span id="stock-count" style="margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft); white-space:nowrap;">${stock.length} of ${stock.length} vehicles</span>
+        <div class="search-field">
+          <label for="f-transmission">Gearbox</label>
+          <select id="f-transmission" data-filter="transmission">
+            <option value="all">Any gearbox</option>
+            <option value="automatic">Automatic</option>
+            <option value="manual">Manual</option>
+          </select>
+        </div>
+        <button type="button" id="find-car-btn" class="btn btn-primary search-btn">Find Car</button>
       </div>
+      <div id="stock-count" class="mono-count">${stock.length} of ${stock.length} vehicles</div>
     </div>
   `;
 
@@ -609,18 +631,20 @@ async function renderLandingPage(env) {
     </script>
 
     <script>
-      // Stock filter bar - everything needed is already on the page, so
-      // filtering just toggles card visibility instead of a re-fetch.
+      // Search form - everything needed is already on the page, so filtering
+      // just toggles card visibility instead of a re-fetch.
       (function () {
-        const state = { price: 'all', transmission: 'all' };
+        const state = { make: 'all', price: 'all', transmission: 'all' };
         const cards = Array.from(document.querySelectorAll('.stock-card'));
         const countEl = document.getElementById('stock-count');
         const emptyEl = document.getElementById('stock-empty');
+        const grid = document.getElementById('stock-grid');
 
         function apply() {
           let visible = 0;
           cards.forEach((card) => {
             const matches =
+              (state.make === 'all' || card.dataset.make === state.make) &&
               (state.price === 'all' || card.dataset.price === state.price) &&
               (state.transmission === 'all' || card.dataset.transmission === state.transmission);
             card.style.display = matches ? '' : 'none';
@@ -630,29 +654,91 @@ async function renderLandingPage(env) {
           if (emptyEl) emptyEl.style.display = visible === 0 ? 'block' : 'none';
         }
 
-        document.querySelectorAll('.filter-group').forEach((group) => {
-          const key = group.dataset.filter;
-          group.querySelectorAll('.chip').forEach((chip) => {
-            chip.addEventListener('click', () => {
-              group.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
-              chip.classList.add('active');
-              state[key] = chip.dataset.value;
-              apply();
-            });
+        document.querySelectorAll('.search-field select').forEach((select) => {
+          select.addEventListener('change', () => {
+            state[select.dataset.filter] = select.value;
+            apply();
           });
         });
+
+        const findBtn = document.getElementById('find-car-btn');
+        if (findBtn) {
+          findBtn.addEventListener('click', () => {
+            apply();
+            if (grid) grid.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+          });
+        }
       })();
     </script>
   `;
   return new Response(pageShell("Home", body, `
-  .chip {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
-    padding: 9px 16px; border-radius: 20px; border: 1px solid var(--line); background: rgba(255,255,255,0.7);
-    color: var(--ink-soft); cursor: pointer; transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  /* Diagonal brand-colour wash behind the hero - soft and blurred rather
+     than a flat shape, bleeding past the hero's own (now dissolving) edges. */
+  .hero-wrap { position: relative; }
+  .diagonal-accent {
+    position: absolute; top: -48px; right: -70px; width: 52%; height: 135%;
+    background: linear-gradient(135deg, rgba(226,137,111,0.55) 0%, rgba(239,195,102,0.4) 55%, transparent 100%);
+    clip-path: polygon(28% 0, 100% 0, 100% 100%, 0% 100%);
+    filter: blur(46px); z-index: 0; pointer-events: none;
+    animation: materialize 1.4s cubic-bezier(0.16,1,0.3,1) both, drift 11s ease-in-out 1.4s infinite;
   }
-  .chip:hover { border-color: var(--ink-soft); }
-  .chip.active { background: var(--sage); color: white; border-color: var(--sage); }
-  .filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .hero-stage.has-photos {
+    position: relative; z-index: 1;
+    -webkit-mask-image: radial-gradient(ellipse 92% 90% at 50% 58%, #000 60%, transparent 100%);
+    mask-image: radial-gradient(ellipse 92% 90% at 50% 58%, #000 60%, transparent 100%);
+  }
+  @keyframes drift {
+    0%, 100% { transform: translate(0,0) scale(1); opacity: 0.9; }
+    50% { transform: translate(-12px, 14px) scale(1.05); opacity: 1; }
+  }
+
+  /* Ethereal materialize-in for above-the-fold hero content - a soft
+     dissolve from blur/scale rather than a hard cut-in. */
+  .materialize { opacity: 0; animation: materialize 1s cubic-bezier(0.16,1,0.3,1) both; }
+  @keyframes materialize {
+    0% { opacity: 0; filter: blur(14px); transform: translateY(14px) scale(0.98); }
+    100% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .materialize, .diagonal-accent { animation: none !important; opacity: 1; filter: none; transform: none; }
+  }
+
+  /* Same dissolve language on scroll-reveal further down the page. */
+  .reveal {
+    filter: blur(8px);
+    transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1), filter 0.9s cubic-bezier(0.16,1,0.3,1);
+  }
+  .reveal.in { filter: blur(0); }
+
+  /* Dropdown search form, styled as one continuous glass "search bar" that
+     overlaps the hero rather than the earlier pill-chip filter bar. */
+  .hero-search { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  .search-form { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; flex: 1; }
+  .search-field { display: flex; flex-direction: column; gap: 6px; min-width: 150px; }
+  .search-field label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--ink-soft);
+  }
+  .search-field select {
+    appearance: none; -webkit-appearance: none; width: 100%;
+    font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 14px; color: var(--ink);
+    background: rgba(255,255,255,0.7) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236B6357' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+    border: 1px solid var(--line); border-radius: 10px; padding: 11px 34px 11px 12px; cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+  .search-field select:hover { border-color: var(--ink-soft); }
+  .search-field select:focus { border-color: var(--sage); }
+  .search-btn { white-space: nowrap; align-self: flex-end; }
+  .mono-count {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft);
+    white-space: nowrap; align-self: center; margin-left: auto;
+  }
+  @media (max-width: 640px) {
+    .search-form { flex-direction: column; align-items: stretch; }
+    .search-field { min-width: 0; }
+    .search-btn { width: 100%; justify-content: center; }
+    .mono-count { margin-left: 0; }
+  }
   `, {
     ogDescription: "Real stock, updated daily. Book a test drive or trade in your car at AutoShow Bloemfontein.",
   }), { headers: { "Content-Type": "text/html" } });
