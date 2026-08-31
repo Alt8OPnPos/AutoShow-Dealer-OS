@@ -18,6 +18,12 @@
 const DEALER_ID = "autoshow-bloemfontein";
 const WHATSAPP_NUMBER = "27761021676"; // AutoShow's real WhatsApp number
 
+// R2 key of a video to autoplay muted/looped behind the hero, e.g.
+// "floor-walkthrough.mp4" - set once the real file is uploaded to the
+// autoshow-vehicle-photos bucket. Leave "" to fall back to the photo
+// slideshow only.
+const HERO_VIDEO_KEY = "";
+
 const BRAND = {
   paper: "#FBF8F3",
   ink: "#2B2620",
@@ -43,7 +49,7 @@ export default {
     if (path === "/dashboard") return renderDashboard(env);
     if (path === "/sitemap.xml") return renderSitemap(env, url);
     if (path === "/robots.txt") return renderRobots(url);
-    if (path.startsWith("/photos/")) return servePhoto(path, env);
+    if (path.startsWith("/photos/")) return servePhoto(request, path, env);
 
     return renderLandingPage(env);
   },
@@ -72,19 +78,39 @@ async function getStockItem(stockId, env) {
     .bind(stockId, DEALER_ID).first();
 }
 
-async function servePhoto(path, env) {
-  // Serves a real customer/vehicle photo uploaded to R2 at /photos/<key>.
-  // Photos land in the bucket via the GitHub-synced upload flow - no code
-  // change needed to add new floor-stock shots, just reference the key in
-  // D1's photo_urls field.
+async function servePhoto(request, path, env) {
+  // Serves a real customer/vehicle photo (or the hero background video)
+  // uploaded to R2 at /photos/<key>. Photos and video land in the bucket
+  // via the Cloudflare dashboard (R2 -> autoshow-vehicle-photos -> Upload)
+  // - no code change needed to add new floor-stock shots, just reference
+  // the key in D1's photo_urls field or in HERO_VIDEO_KEY.
   const key = decodeURIComponent(path.replace("/photos/", ""));
-  const object = await env.PHOTOS.get(key);
+
+  // Video playback needs Range support - browsers won't play (or can't
+  // seek) an R2 object served as one flat 200 response.
+  const rangeHeader = request.headers.get("range");
+  const rangeMatch = rangeHeader && rangeHeader.match(/^bytes=(\d+)-(\d*)$/);
+  const object = rangeMatch
+    ? await env.PHOTOS.get(key, {
+        range: {
+          offset: Number(rangeMatch[1]),
+          length: rangeMatch[2] ? Number(rangeMatch[2]) - Number(rangeMatch[1]) + 1 : undefined,
+        },
+      })
+    : await env.PHOTOS.get(key);
   if (!object) return new Response("Photo not found", { status: 404 });
 
   const headers = new Headers();
   object.writeHttpMetadata(headers);
   headers.set("etag", object.httpEtag);
   headers.set("cache-control", "public, max-age=31536000, immutable");
+  headers.set("accept-ranges", "bytes");
+
+  if (object.range) {
+    const { offset, length } = object.range;
+    headers.set("content-range", `bytes ${offset}-${offset + length - 1}/${object.size}`);
+    return new Response(object.body, { status: 206, headers });
+  }
   return new Response(object.body, { headers });
 }
 
@@ -275,6 +301,9 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     display: flex; align-items: flex-end; margin-top: 10px; isolation: isolate; perspective: 1000px;
   }
   .hero-bg { position: absolute; inset: -4%; z-index: 0; transition: transform 0.25s ease-out; }
+  .hero-video {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;
+  }
   .hero-slide {
     position: absolute; inset: 0; background-size: cover; background-position: center;
     opacity: 0; animation: kenburns 16s ease-in-out infinite; will-change: transform, opacity;
@@ -343,6 +372,15 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     // Hero: crossfading slideshow of real floor-stock photos + pointer parallax.
     const stage = document.getElementById('hero-stage');
     if (stage) {
+      const video = document.getElementById('hero-video');
+      if (video) {
+        if (prefersReducedMotion) {
+          video.pause();
+          video.removeAttribute('autoplay');
+        } else {
+          video.play().catch(() => {});
+        }
+      }
       const slides = stage.querySelectorAll('.hero-slide');
       if (slides.length > 1 && !prefersReducedMotion) {
         let i = 0;
@@ -455,11 +493,20 @@ async function renderLandingPage(env) {
       </div>
   `;
 
-  const hero = heroSlides.length
+  const heroVideoUrl = HERO_VIDEO_KEY ? `/photos/${encodeURIComponent(HERO_VIDEO_KEY)}` : "";
+  const heroMedia = heroVideoUrl
+    ? `<video class="hero-video" id="hero-video" autoplay muted loop playsinline preload="auto"${heroSlides[0] ? ` poster="${heroSlides[0]}"` : ""}>
+         <source src="${heroVideoUrl}" type="video/mp4">
+       </video>`
+    : heroSlides.length
+      ? `<div class="hero-bg">
+           ${heroSlides.map((src, i) => `<div class="hero-slide${i === 0 ? ' active' : ''}" style="background-image:url('${src}'); animation-delay:${(i * 0.6).toFixed(1)}s;"></div>`).join("")}
+         </div>`
+      : "";
+
+  const hero = heroMedia
     ? `<div class="hero-stage has-photos" id="hero-stage">
-        <div class="hero-bg">
-          ${heroSlides.map((src, i) => `<div class="hero-slide${i === 0 ? ' active' : ''}" style="background-image:url('${src}'); animation-delay:${(i * 0.6).toFixed(1)}s;"></div>`).join("")}
-        </div>
+        ${heroMedia}
         <div class="hero-overlay"></div>
         <div class="hero-content">${heroInner}</div>
       </div>`
