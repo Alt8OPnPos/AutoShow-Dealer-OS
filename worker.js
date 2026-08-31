@@ -18,17 +18,24 @@
 const DEALER_ID = "autoshow-bloemfontein";
 const WHATSAPP_NUMBER = "27761021676"; // AutoShow's real WhatsApp number
 
-// R2 key of a video to autoplay muted/looped behind the hero. Leave ""
-// to fall back to the photo slideshow only.
-const HERO_VIDEO_KEY = "YTShort_27Aug2026_13_41_13.mp4";
+// R2 keys of videos to autoplay muted/looped behind the hero as a
+// crossfading slideshow at reduced opacity. Upload these exact files to R2
+// (dashboard -> autoshow-vehicle-photos -> Upload) with these exact names -
+// no code change needed after that. Leave the array empty to fall back to
+// the real floor-stock photo slideshow instead.
+const HERO_VIDEO_KEYS = [
+  "500930063_1788189877930701.mp4",
+  "691950586_1788189700216226.mp4",
+];
 
+// AutoShow brand: red/black/blue.
 const BRAND = {
-  paper: "#FBF8F3",
-  ink: "#2B2620",
-  inkSoft: "#6B6357",
-  coral: "#E2896F",
-  gold: "#EFC366",
-  sage: "#7FA084",
+  paper: "#F6F6F8",
+  ink: "#121212",
+  inkSoft: "#5C5D63",
+  coral: "#E31E2B", // red
+  gold: "#2B63EB", // blue (bright accent)
+  sage: "#123E91", // blue (deep, primary actions)
 };
 
 export default {
@@ -211,8 +218,8 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   body {
     margin: 0; font-family: 'Manrope', sans-serif; color: var(--ink);
     background:
-      radial-gradient(circle at 15% 8%, rgba(239,195,102,0.14), transparent 45%),
-      radial-gradient(circle at 90% 20%, rgba(226,137,111,0.12), transparent 40%),
+      radial-gradient(circle at 15% 8%, rgba(43,99,235,0.12), transparent 45%),
+      radial-gradient(circle at 90% 20%, rgba(227,30,43,0.10), transparent 40%),
       var(--paper);
     min-height: 100vh; padding-bottom: 60px;
   }
@@ -245,8 +252,8 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   }
   .btn:hover { transform: translateY(-1px); }
   .btn:active { transform: translateY(0); }
-  .btn-primary { background: var(--sage); color: white; box-shadow: 0 4px 14px rgba(127,160,132,0.3); }
-  .btn-primary:hover { box-shadow: 0 6px 18px rgba(127,160,132,0.4); }
+  .btn-primary { background: var(--sage); color: white; box-shadow: 0 4px 14px rgba(18,62,145,0.3); }
+  .btn-primary:hover { box-shadow: 0 6px 18px rgba(18,62,145,0.4); }
   .btn-whatsapp { background: #22c55e; color: white; box-shadow: 0 4px 14px rgba(34,197,94,0.28); }
   .btn-whatsapp:hover { box-shadow: 0 6px 18px rgba(34,197,94,0.38); }
   .btn-outline { background: var(--glass); color: var(--ink); border: 1px solid var(--line); }
@@ -261,7 +268,7 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     aspect-ratio: 16/9; border-radius: 12px; margin-bottom: 16px;
     background:
       repeating-linear-gradient(135deg, rgba(43,38,32,0.03) 0px, rgba(43,38,32,0.03) 2px, transparent 2px, transparent 14px),
-      linear-gradient(135deg, rgba(226,137,111,0.10), rgba(239,195,102,0.10));
+      linear-gradient(135deg, rgba(227,30,43,0.08), rgba(43,99,235,0.08));
     display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px;
     border: 1px solid var(--line);
   }
@@ -341,7 +348,7 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   }
   ${extraHead}
 </style>
-<noscript><style>.reveal { opacity: 1 !important; transform: none !important; }</style></noscript>
+<noscript><style>.reveal, .materialize { opacity: 1 !important; transform: none !important; filter: none !important; }</style></noscript>
 <script>
   window.addEventListener('scroll', () => {
     const h = document.querySelector('header');
@@ -470,12 +477,13 @@ async function renderLandingPage(env) {
   }
   const heroSlides = heroPhotos.slice(0, 8);
 
-  // Buckets/keys the filter bar below matches against - client-side only,
+  // Buckets/keys the search form below matches against - client-side only,
   // no new API needed since the whole stock list is already on the page.
   const priceBucket = (price) => price < 150000 ? "low" : price < 300000 ? "mid" : "high";
+  const uniqueMakes = [...new Set(stock.map(s => s.make).filter(Boolean))].sort();
 
   const stockCards = stock.map(s => `
-    <div class="card tilt-card reveal stock-card" data-price="${priceBucket(Number(s.retail_price))}" data-transmission="${(s.transmission || "").toLowerCase()}">
+    <div class="card tilt-card reveal stock-card" data-make="${(s.make || "").toLowerCase()}" data-price="${priceBucket(Number(s.retail_price))}" data-transmission="${(s.transmission || "").toLowerCase()}">
       ${vehicleMedia(s)}
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
         <div>
@@ -484,7 +492,7 @@ async function renderLandingPage(env) {
             ${mileageText(s)}${s.transmission} &middot; ${s.fuel_type}
           </div>
         </div>
-        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; background:${s.status === 'available' ? 'rgba(127,160,132,0.22)' : 'rgba(239,195,102,0.28)'}; color:${s.status === 'available' ? '#3F5C43' : '#7A5B12'};">${s.status}</span>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; background:${s.status === 'available' ? 'rgba(18,62,145,0.16)' : 'rgba(227,30,43,0.14)'}; color:${s.status === 'available' ? '#123E91' : '#8C1620'};">${s.status}</span>
       </div>
       <div style="font-family:'Fraunces',serif; font-weight:600; font-size:22px; color:var(--sage); margin:10px 0;">R ${Number(s.retail_price).toLocaleString()}</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -494,30 +502,79 @@ async function renderLandingPage(env) {
     </div>
   `).join("");
 
-  // Compact, inventory-forward hero: the pitch is the stock itself, so the
-  // headline states the real count and the filter bar sits right under it
-  // instead of a full-bleed photo/video block pushing the grid below the fold.
-  const hero = `
-    <div class="reveal" style="padding:36px 0 6px;">
-      <div class="eyebrow">Browse the floor</div>
-      <h1 style="font-size:clamp(28px,5vw,42px); margin:14px 0 10px; line-height:1.12;">${stock.length} car${stock.length === 1 ? "" : "s"} on the floor. Real prices, filter and go.</h1>
-      <p style="font-size:16px; max-width:56ch; line-height:1.6; color:var(--ink-soft); margin:0;">Updated daily, no waiting for a call back. Selling instead? <a href="/evaluate" style="color:var(--coral); font-weight:600;">Get a trade-in value &rarr;</a></p>
-    </div>
+  // Full-bleed hero (same hero-stage the rest of the site already ships).
+  // Videos in HERO_VIDEO_KEYS play as a silent, crossfading, reduced-opacity
+  // background slideshow; falls back to the real floor-stock photo
+  // slideshow if no video keys are configured.
+  const heroVideoSlides = HERO_VIDEO_KEYS.map((key, i) => `
+    <video class="hero-video-slide${i === 0 ? " active" : ""}" muted loop playsinline preload="${i === 0 ? "auto" : "none"}"${i === 0 && heroSlides[0] ? ` poster="${heroSlides[0]}"` : ""}>
+      <source src="/photos/${encodeURIComponent(key)}" type="video/mp4">
+    </video>
+  `).join("");
+
+  const heroMedia = HERO_VIDEO_KEYS.length
+    ? `<div class="hero-video-stack">${heroVideoSlides}</div>`
+    : heroSlides.length
+      ? `<div class="hero-bg">
+           ${heroSlides.map((src, i) => `<div class="hero-slide${i === 0 ? ' active' : ''}" style="background-image:url('${src}'); animation-delay:${(i * 0.6).toFixed(1)}s;"></div>`).join("")}
+         </div>`
+      : "";
+
+  const heroInner = `
+      <div class="eyebrow materialize" style="animation-delay:0.1s;">Bloemfontein &middot; Quality Used Vehicles</div>
+      <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(32px,6vw,50px); margin:0 0 14px; line-height:1.08;">Find your next car,<br>book a test drive today.</h1>
+      <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:50ch; line-height:1.6;">Real stock, updated daily. Search below and book a time that works for you.</p>
   `;
 
+  // The diagonal wash behind the hero is a soft brand-colour gradient, not a
+  // flat shape - it bleeds out past the hero's own edges, which are masked
+  // to dissolve rather than clipped to a hard box.
+  const hero = heroMedia
+    ? `<div class="hero-wrap">
+        <div class="diagonal-accent materialize" style="animation-delay:0s;" aria-hidden="true"></div>
+        <div class="hero-stage has-photos" id="hero-stage" style="min-height:420px;">
+          ${heroMedia}
+          <div class="hero-overlay"></div>
+          <div class="hero-content" style="padding-bottom:88px;">${heroInner}</div>
+        </div>
+      </div>`
+    : `<div class="hero-wrap" style="padding:44px 0 4px; position:relative;">
+        <div class="diagonal-accent materialize" style="animation-delay:0s;" aria-hidden="true"></div>
+        <div class="eyebrow materialize" style="animation-delay:0.1s;">Bloemfontein &middot; Quality Used Vehicles</div>
+        <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(30px,5.4vw,44px); margin:14px 0 10px; line-height:1.1;">Find your next car, book a test drive today.</h1>
+        <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:56ch; line-height:1.6; color:var(--ink-soft); margin:0;">Real stock, updated daily. Selling instead? <a href="/evaluate" style="color:var(--coral); font-weight:600;">Get a trade-in value &rarr;</a></p>
+      </div>`;
+
   const filterBar = `
-    <div class="reveal" style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin:22px 0 8px;">
-      <div class="filter-group" data-filter="price">
-        <button type="button" class="chip active" data-value="all">All prices</button>
-        <button type="button" class="chip" data-value="low">Under R150k</button>
-        <button type="button" class="chip" data-value="mid">R150k&ndash;R300k</button>
-        <button type="button" class="chip" data-value="high">R300k+</button>
+    <div class="card materialize hero-search" style="animation-delay:0.55s; position:relative; z-index:5; margin-top:${heroMedia ? "-64px" : "20px"}; margin-bottom:32px; padding:24px 26px;">
+      <div class="search-form">
+        <div class="search-field">
+          <label for="f-make">Make</label>
+          <select id="f-make" data-filter="make">
+            <option value="all">All makes</option>
+            ${uniqueMakes.map(m => `<option value="${m.toLowerCase()}">${m}</option>`).join("")}
+          </select>
+        </div>
+        <div class="search-field">
+          <label for="f-price">Price Range</label>
+          <select id="f-price" data-filter="price">
+            <option value="all">Any price</option>
+            <option value="low">Under R150k</option>
+            <option value="mid">R150k&ndash;R300k</option>
+            <option value="high">R300k+</option>
+          </select>
+        </div>
+        <div class="search-field">
+          <label for="f-transmission">Gearbox</label>
+          <select id="f-transmission" data-filter="transmission">
+            <option value="all">Any gearbox</option>
+            <option value="automatic">Automatic</option>
+            <option value="manual">Manual</option>
+          </select>
+        </div>
+        <button type="button" id="find-car-btn" class="btn btn-primary search-btn">Find Car</button>
       </div>
-      <div class="filter-group" data-filter="transmission" style="margin-left:auto;">
-        <button type="button" class="chip active" data-value="all">Any gearbox</button>
-        <button type="button" class="chip" data-value="automatic">Automatic</button>
-        <button type="button" class="chip" data-value="manual">Manual</button>
-      </div>
+      <div id="stock-count" class="mono-count">${stock.length} of ${stock.length} vehicles</div>
     </div>
   `;
 
@@ -528,9 +585,8 @@ async function renderLandingPage(env) {
       <div id="recently-viewed-list"></div>
     </div>
     ${filterBar}
-    <div class="reveal" style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px;">
+    <div class="reveal" style="margin-bottom:18px;">
       <h2 id="stock" style="font-size:26px; margin:0;">Current Stock</h2>
-      <span id="stock-count" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft);">${stock.length} of ${stock.length} vehicles</span>
     </div>
     <div id="stock-grid">
       ${stockCards || '<div class="card">No stock currently listed.</div>'}
@@ -585,18 +641,50 @@ async function renderLandingPage(env) {
     </script>
 
     <script>
-      // Stock filter bar - everything needed is already on the page, so
-      // filtering just toggles card visibility instead of a re-fetch.
+      // Silent hero video slideshow - crossfades between clips, pausing
+      // whichever isn't visible so only one plays (and downloads) at a time.
       (function () {
-        const state = { price: 'all', transmission: 'all' };
+        const slides = Array.from(document.querySelectorAll('.hero-video-slide'));
+        if (!slides.length) return;
+
+        if (prefersReducedMotion) {
+          slides.forEach((v) => { v.pause(); v.removeAttribute('autoplay'); });
+          return;
+        }
+
+        slides[0].play().catch(() => {});
+        if (slides.length < 2) return;
+
+        let i = 0;
+        setInterval(() => {
+          const current = slides[i];
+          i = (i + 1) % slides.length;
+          const next = slides[i];
+          next.preload = 'auto';
+          next.currentTime = 0;
+          next.play().catch(() => {});
+          next.classList.add('active');
+          current.classList.remove('active');
+          setTimeout(() => current.pause(), 1900);
+        }, 14000);
+      })();
+    </script>
+
+    <script>
+      // Search form - everything needed is already on the page, so filtering
+      // just toggles card visibility instead of a re-fetch.
+      (function () {
+        const state = { make: 'all', price: 'all', transmission: 'all' };
         const cards = Array.from(document.querySelectorAll('.stock-card'));
         const countEl = document.getElementById('stock-count');
         const emptyEl = document.getElementById('stock-empty');
+        const grid = document.getElementById('stock-grid');
 
         function apply() {
           let visible = 0;
           cards.forEach((card) => {
             const matches =
+              (state.make === 'all' || card.dataset.make === state.make) &&
               (state.price === 'all' || card.dataset.price === state.price) &&
               (state.transmission === 'all' || card.dataset.transmission === state.transmission);
             card.style.display = matches ? '' : 'none';
@@ -606,29 +694,101 @@ async function renderLandingPage(env) {
           if (emptyEl) emptyEl.style.display = visible === 0 ? 'block' : 'none';
         }
 
-        document.querySelectorAll('.filter-group').forEach((group) => {
-          const key = group.dataset.filter;
-          group.querySelectorAll('.chip').forEach((chip) => {
-            chip.addEventListener('click', () => {
-              group.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
-              chip.classList.add('active');
-              state[key] = chip.dataset.value;
-              apply();
-            });
+        document.querySelectorAll('.search-field select').forEach((select) => {
+          select.addEventListener('change', () => {
+            state[select.dataset.filter] = select.value;
+            apply();
           });
         });
+
+        const findBtn = document.getElementById('find-car-btn');
+        if (findBtn) {
+          findBtn.addEventListener('click', () => {
+            apply();
+            if (grid) grid.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+          });
+        }
       })();
     </script>
   `;
   return new Response(pageShell("Home", body, `
-  .chip {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
-    padding: 9px 16px; border-radius: 20px; border: 1px solid var(--line); background: rgba(255,255,255,0.7);
-    color: var(--ink-soft); cursor: pointer; transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  /* Diagonal brand-colour wash behind the hero - soft and blurred rather
+     than a flat shape, bleeding past the hero's own (now dissolving) edges. */
+  .hero-wrap { position: relative; }
+  .diagonal-accent {
+    position: absolute; top: -48px; right: -70px; width: 52%; height: 135%;
+    background: linear-gradient(135deg, rgba(227,30,43,0.6) 0%, rgba(43,99,235,0.42) 55%, transparent 100%);
+    clip-path: polygon(28% 0, 100% 0, 100% 100%, 0% 100%);
+    filter: blur(46px); z-index: 0; pointer-events: none;
+    animation: materialize 1.4s cubic-bezier(0.16,1,0.3,1) both, drift 11s ease-in-out 1.4s infinite;
   }
-  .chip:hover { border-color: var(--ink-soft); }
-  .chip.active { background: var(--sage); color: white; border-color: var(--sage); }
-  .filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .hero-stage.has-photos {
+    position: relative; z-index: 1;
+    -webkit-mask-image: radial-gradient(ellipse 92% 90% at 50% 58%, #000 60%, transparent 100%);
+    mask-image: radial-gradient(ellipse 92% 90% at 50% 58%, #000 60%, transparent 100%);
+  }
+
+  /* Silent background video slideshow - crossfades between clips at a
+     deliberately lowered opacity so it reads as atmosphere, not footage. */
+  .hero-video-stack { position: absolute; inset: 0; z-index: 0; }
+  .hero-video-slide {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    opacity: 0; transition: opacity 1.8s ease; z-index: 0;
+  }
+  .hero-video-slide.active { opacity: 0.55; z-index: 1; }
+
+  @keyframes drift {
+    0%, 100% { transform: translate(0,0) scale(1); opacity: 0.9; }
+    50% { transform: translate(-12px, 14px) scale(1.05); opacity: 1; }
+  }
+
+  /* Ethereal materialize-in for above-the-fold hero content - a soft
+     dissolve from blur/scale rather than a hard cut-in. */
+  .materialize { opacity: 0; animation: materialize 1s cubic-bezier(0.16,1,0.3,1) both; }
+  @keyframes materialize {
+    0% { opacity: 0; filter: blur(14px); transform: translateY(14px) scale(0.98); }
+    100% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .materialize, .diagonal-accent { animation: none !important; opacity: 1; filter: none; transform: none; }
+  }
+
+  /* Same dissolve language on scroll-reveal further down the page. */
+  .reveal {
+    filter: blur(8px);
+    transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1), filter 0.9s cubic-bezier(0.16,1,0.3,1);
+  }
+  .reveal.in { filter: blur(0); }
+
+  /* Dropdown search form, styled as one continuous glass "search bar" that
+     overlaps the hero rather than the earlier pill-chip filter bar. */
+  .hero-search { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  .search-form { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; flex: 1; }
+  .search-field { display: flex; flex-direction: column; gap: 6px; min-width: 150px; }
+  .search-field label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--ink-soft);
+  }
+  .search-field select {
+    appearance: none; -webkit-appearance: none; width: 100%;
+    font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 14px; color: var(--ink);
+    background: rgba(255,255,255,0.7) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236B6357' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+    border: 1px solid var(--line); border-radius: 10px; padding: 11px 34px 11px 12px; cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+  .search-field select:hover { border-color: var(--ink-soft); }
+  .search-field select:focus { border-color: var(--sage); }
+  .search-btn { white-space: nowrap; align-self: flex-end; }
+  .mono-count {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft);
+    white-space: nowrap; align-self: center; margin-left: auto;
+  }
+  @media (max-width: 640px) {
+    .search-form { flex-direction: column; align-items: stretch; }
+    .search-field { min-width: 0; }
+    .search-btn { width: 100%; justify-content: center; }
+    .mono-count { margin-left: 0; }
+  }
   `, {
     ogDescription: "Real stock, updated daily. Book a test drive or trade in your car at AutoShow Bloemfontein.",
   }), { headers: { "Content-Type": "text/html" } });
@@ -761,7 +921,7 @@ async function renderBookingPage(type, url, env) {
   let vehicleContext = "";
   if (isTestDrive && stockId) {
     const item = await getStockItem(stockId, env);
-    if (item) vehicleContext = `<div class="card" style="background:rgba(127,160,132,0.12);">Booking for: <strong>${item.year} ${item.make} ${item.model}</strong></div>`;
+    if (item) vehicleContext = `<div class="card" style="background:rgba(18,62,145,0.10);">Booking for: <strong>${item.year} ${item.make} ${item.model}</strong></div>`;
   }
 
   const body = `
