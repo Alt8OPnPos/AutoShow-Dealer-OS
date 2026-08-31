@@ -87,17 +87,36 @@ async function servePhoto(request, path, env) {
   const key = decodeURIComponent(path.replace("/photos/", ""));
 
   // Video playback needs Range support - browsers won't play (or can't
-  // seek) an R2 object served as one flat 200 response.
+  // seek) an R2 object served as one flat 200 response. R2 throws if the
+  // requested offset is at/beyond the object's actual size, so check the
+  // size first (via head) and answer out-of-range requests with a clean
+  // 416 instead of letting that throw into a 500.
   const rangeHeader = request.headers.get("range");
   const rangeMatch = rangeHeader && rangeHeader.match(/^bytes=(\d+)-(\d*)$/);
-  const object = rangeMatch
-    ? await env.PHOTOS.get(key, {
-        range: {
-          offset: Number(rangeMatch[1]),
-          length: rangeMatch[2] ? Number(rangeMatch[2]) - Number(rangeMatch[1]) + 1 : undefined,
-        },
-      })
-    : await env.PHOTOS.get(key);
+
+  if (rangeMatch) {
+    const head = await env.PHOTOS.head(key);
+    if (!head) return new Response("Photo not found", { status: 404 });
+
+    const size = head.size;
+    const offset = Number(rangeMatch[1]);
+    const end = rangeMatch[2] ? Number(rangeMatch[2]) : size - 1;
+    if (offset >= size || end < offset) {
+      return new Response(null, { status: 416, headers: { "content-range": `bytes */${size}` } });
+    }
+
+    const length = Math.min(end, size - 1) - offset + 1;
+    const object = await env.PHOTOS.get(key, { range: { offset, length } });
+    const headers = new Headers();
+    object.writeHttpMetadata(headers);
+    headers.set("etag", object.httpEtag);
+    headers.set("cache-control", "public, max-age=31536000, immutable");
+    headers.set("accept-ranges", "bytes");
+    headers.set("content-range", `bytes ${offset}-${offset + length - 1}/${size}`);
+    return new Response(object.body, { status: 206, headers });
+  }
+
+  const object = await env.PHOTOS.get(key);
   if (!object) return new Response("Photo not found", { status: 404 });
 
   const headers = new Headers();
@@ -105,12 +124,6 @@ async function servePhoto(request, path, env) {
   headers.set("etag", object.httpEtag);
   headers.set("cache-control", "public, max-age=31536000, immutable");
   headers.set("accept-ranges", "bytes");
-
-  if (object.range) {
-    const { offset, length } = object.range;
-    headers.set("content-range", `bytes ${offset}-${offset + length - 1}/${object.size}`);
-    return new Response(object.body, { status: 206, headers });
-  }
   return new Response(object.body, { headers });
 }
 
@@ -330,6 +343,7 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   }
   ${extraHead}
 </style>
+<noscript><style>.reveal { opacity: 1 !important; transform: none !important; }</style></noscript>
 <script>
   window.addEventListener('scroll', () => {
     const h = document.querySelector('header');
@@ -529,7 +543,7 @@ async function renderLandingPage(env) {
       <h2 style="font-size:24px; margin-bottom:6px;">From the Floor</h2>
       <p style="color:var(--ink-soft); font-size:14px; margin-top:0; max-width:56ch;">Real, random shots from what's on the lot right now &mdash; no stock photography.</p>
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:16px;">
-        ${heroPhotos.slice(0, 8).map(src => `
+        ${heroSlides.map(src => `
           <div class="card tilt-card" style="padding:0; overflow:hidden;">
             <img src="${src}" alt="A vehicle on the AutoShow floor" loading="lazy" style="width:100%; aspect-ratio:1; object-fit:cover; display:block;">
           </div>
