@@ -63,6 +63,7 @@ export default {
     if (path === "/robots.txt") return renderRobots(url);
     if (path.startsWith("/photos/")) return servePhoto(request, path, env);
     if (path === "/api/photo-info") return servePhotoInfo(url, env);
+    if (path === "/api/photo-list") return servePhotoList(url, env);
 
     return renderLandingPage(env, url);
   },
@@ -158,6 +159,26 @@ async function servePhotoInfo(url, env) {
     contentType: (head.httpMetadata && head.httpMetadata.contentType) || null,
     uploaded: head.uploaded,
     etag: head.httpEtag,
+  });
+}
+
+async function servePhotoList(url, env) {
+  // Temporary read-only diagnostic - lists real R2 object keys directly
+  // from the bucket, so filenames never have to be transcribed by hand
+  // from a dashboard screenshot (which truncates long names) again.
+  // GET /api/photo-list?prefix=<optional r2 key prefix>
+  const prefix = url.searchParams.get("prefix") || "";
+  const listing = await env.PHOTOS.list({ prefix, limit: 1000 });
+
+  return jsonResponse({
+    prefix,
+    count: listing.objects.length,
+    truncated: listing.truncated,
+    objects: listing.objects.map((o) => ({
+      key: o.key,
+      size: o.size,
+      uploaded: o.uploaded,
+    })),
   });
 }
 
@@ -652,7 +673,7 @@ async function renderLandingPage(env, url) {
         </div>
         <button type="button" id="find-car-btn" class="btn btn-primary search-btn">Find Car</button>
       </div>
-      <div id="stock-count" class="mono-count">Every car we have, no filler &middot; ${stock.length} vehicles</div>
+      <div id="stock-count" class="mono-count">Every car we have, no filler</div>
     </div>
   `;
 
@@ -770,7 +791,7 @@ async function renderLandingPage(env, url) {
           });
           if (countEl) {
             countEl.textContent = visible === cards.length
-              ? 'Every car we have, no filler · ' + cards.length + ' vehicles'
+              ? 'Every car we have, no filler'
               : visible + ' of ' + cards.length + ' vehicles';
           }
           if (emptyEl) emptyEl.style.display = visible === 0 ? 'block' : 'none';
