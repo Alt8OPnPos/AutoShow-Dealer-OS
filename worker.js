@@ -28,14 +28,15 @@ const HERO_VIDEO_KEYS = [
   "691950586_1788189700216226.mp4",
 ];
 
-// AutoShow brand: red/black/blue.
+// SabelaLogic brand palette - keep these exact values across future
+// builds/redesigns. Layout and features can change; these six colors don't.
 const BRAND = {
-  paper: "#F6F6F8",
-  ink: "#121212",
-  inkSoft: "#5C5D63",
-  coral: "#E31E2B", // red
-  gold: "#2B63EB", // blue (bright accent)
-  sage: "#123E91", // blue (deep, primary actions)
+  paper: "#FBF8F3",
+  ink: "#2B2620",
+  inkSoft: "#6B6357",
+  coral: "#E2896F",
+  gold: "#EFC366",
+  sage: "#7FA084",
 };
 
 export default {
@@ -218,8 +219,8 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   body {
     margin: 0; font-family: 'Manrope', sans-serif; color: var(--ink);
     background:
-      radial-gradient(circle at 15% 8%, rgba(43,99,235,0.12), transparent 45%),
-      radial-gradient(circle at 90% 20%, rgba(227,30,43,0.10), transparent 40%),
+      radial-gradient(circle at 15% 8%, rgba(239,195,102,0.14), transparent 45%),
+      radial-gradient(circle at 90% 20%, rgba(226,137,111,0.12), transparent 40%),
       var(--paper);
     min-height: 100vh; padding-bottom: 60px;
   }
@@ -252,8 +253,8 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   }
   .btn:hover { transform: translateY(-1px); }
   .btn:active { transform: translateY(0); }
-  .btn-primary { background: var(--sage); color: white; box-shadow: 0 4px 14px rgba(18,62,145,0.3); }
-  .btn-primary:hover { box-shadow: 0 6px 18px rgba(18,62,145,0.4); }
+  .btn-primary { background: var(--sage); color: white; box-shadow: 0 4px 14px rgba(127,160,132,0.3); }
+  .btn-primary:hover { box-shadow: 0 6px 18px rgba(127,160,132,0.4); }
   .btn-whatsapp { background: #22c55e; color: white; box-shadow: 0 4px 14px rgba(34,197,94,0.28); }
   .btn-whatsapp:hover { box-shadow: 0 6px 18px rgba(34,197,94,0.38); }
   .btn-outline { background: var(--glass); color: var(--ink); border: 1px solid var(--line); }
@@ -268,7 +269,7 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     aspect-ratio: 16/9; border-radius: 12px; margin-bottom: 16px;
     background:
       repeating-linear-gradient(135deg, rgba(43,38,32,0.03) 0px, rgba(43,38,32,0.03) 2px, transparent 2px, transparent 14px),
-      linear-gradient(135deg, rgba(227,30,43,0.08), rgba(43,99,235,0.08));
+      linear-gradient(135deg, rgba(226,137,111,0.10), rgba(239,195,102,0.10));
     display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px;
     border: 1px solid var(--line);
   }
@@ -492,7 +493,7 @@ async function renderLandingPage(env) {
             ${mileageText(s)}${s.transmission} &middot; ${s.fuel_type}
           </div>
         </div>
-        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; background:${s.status === 'available' ? 'rgba(18,62,145,0.16)' : 'rgba(227,30,43,0.14)'}; color:${s.status === 'available' ? '#123E91' : '#8C1620'};">${s.status}</span>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; background:${s.status === 'available' ? 'rgba(127,160,132,0.22)' : 'rgba(239,195,102,0.28)'}; color:${s.status === 'available' ? '#3F5C43' : '#7A5B12'};">${s.status}</span>
       </div>
       <div style="font-family:'Fraunces',serif; font-weight:600; font-size:22px; color:var(--sage); margin:10px 0;">R ${Number(s.retail_price).toLocaleString()}</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -717,7 +718,7 @@ async function renderLandingPage(env) {
   .hero-wrap { position: relative; }
   .diagonal-accent {
     position: absolute; top: -48px; right: -70px; width: 52%; height: 135%;
-    background: linear-gradient(135deg, rgba(227,30,43,0.6) 0%, rgba(43,99,235,0.42) 55%, transparent 100%);
+    background: linear-gradient(135deg, rgba(226,137,111,0.6) 0%, rgba(239,195,102,0.42) 55%, transparent 100%);
     clip-path: polygon(28% 0, 100% 0, 100% 100%, 0% 100%);
     filter: blur(46px); z-index: 0; pointer-events: none;
     animation: materialize 1.4s cubic-bezier(0.16,1,0.3,1) both, drift 11s ease-in-out 1.4s infinite;
@@ -921,7 +922,7 @@ async function renderBookingPage(type, url, env) {
   let vehicleContext = "";
   if (isTestDrive && stockId) {
     const item = await getStockItem(stockId, env);
-    if (item) vehicleContext = `<div class="card" style="background:rgba(18,62,145,0.10);">Booking for: <strong>${item.year} ${item.make} ${item.model}</strong></div>`;
+    if (item) vehicleContext = `<div class="card" style="background:rgba(127,160,132,0.12);">Booking for: <strong>${item.year} ${item.make} ${item.model}</strong></div>`;
   }
 
   const body = `
