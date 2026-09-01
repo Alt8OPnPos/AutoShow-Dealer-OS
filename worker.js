@@ -28,15 +28,15 @@ const HERO_VIDEO_KEYS = [
   "691950586_1788189700216226.mp4",
 ];
 
-// SabelaLogic brand palette - keep these exact values across future
-// builds/redesigns. Layout and features can change; these six colors don't.
+// AutoShow brand: red/black/blue/white. Keep these exact values across
+// future builds/redesigns - layout and features can change, these can't.
 const BRAND = {
-  paper: "#FBF8F3",
-  ink: "#2B2620",
-  inkSoft: "#6B6357",
-  coral: "#E2896F",
-  gold: "#EFC366",
-  sage: "#7FA084",
+  paper: "#F6F6F8",
+  ink: "#121212",
+  inkSoft: "#5C5D63",
+  coral: "#E31E2B", // red
+  gold: "#2B63EB", // blue (bright accent)
+  sage: "#123E91", // blue (deep, primary actions)
 };
 
 export default {
@@ -212,15 +212,15 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   :root {
     --paper: ${BRAND.paper}; --ink: ${BRAND.ink}; --ink-soft: ${BRAND.inkSoft};
     --coral: ${BRAND.coral}; --gold: ${BRAND.gold}; --sage: ${BRAND.sage};
-    --line: rgba(43,38,32,0.10);
+    --line: rgba(18,18,18,0.10);
     --glass: rgba(255,255,255,0.6); --glass-border: rgba(255,255,255,0.7);
   }
   * { box-sizing: border-box; }
   body {
     margin: 0; font-family: 'Manrope', sans-serif; color: var(--ink);
     background:
-      radial-gradient(circle at 15% 8%, rgba(239,195,102,0.14), transparent 45%),
-      radial-gradient(circle at 90% 20%, rgba(226,137,111,0.12), transparent 40%),
+      radial-gradient(circle at 15% 8%, rgba(43,99,235,0.12), transparent 45%),
+      radial-gradient(circle at 90% 20%, rgba(227,30,43,0.10), transparent 40%),
       var(--paper);
     min-height: 100vh; padding-bottom: 60px;
   }
@@ -228,10 +228,10 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     max-width: 1100px; margin: 0 auto; padding: 20px; display: flex;
     justify-content: space-between; align-items: center;
     position: sticky; top: 0; z-index: 20;
-    background: rgba(251,248,243,0.85); backdrop-filter: blur(14px);
+    background: rgba(246,246,248,0.85); backdrop-filter: blur(14px);
     border-bottom: 1px solid transparent; transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
-  header.scrolled { border-bottom-color: var(--line); box-shadow: 0 4px 20px rgba(43,38,32,0.05); }
+  header.scrolled { border-bottom-color: var(--line); box-shadow: 0 4px 20px rgba(18,18,18,0.05); }
   nav a {
     font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
     letter-spacing: 0.06em; color: var(--ink-soft); text-decoration: none; margin-left: 20px;
@@ -253,8 +253,8 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   }
   .btn:hover { transform: translateY(-1px); }
   .btn:active { transform: translateY(0); }
-  .btn-primary { background: var(--sage); color: white; box-shadow: 0 4px 14px rgba(127,160,132,0.3); }
-  .btn-primary:hover { box-shadow: 0 6px 18px rgba(127,160,132,0.4); }
+  .btn-primary { background: var(--sage); color: white; box-shadow: 0 4px 14px rgba(18,62,145,0.3); }
+  .btn-primary:hover { box-shadow: 0 6px 18px rgba(18,62,145,0.4); }
   .btn-whatsapp { background: #22c55e; color: white; box-shadow: 0 4px 14px rgba(34,197,94,0.28); }
   .btn-whatsapp:hover { box-shadow: 0 6px 18px rgba(34,197,94,0.38); }
   .btn-outline { background: var(--glass); color: var(--ink); border: 1px solid var(--line); }
@@ -264,12 +264,12 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     border-radius: 18px; padding: 22px; margin-bottom: 14px;
     transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   }
-  .card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(43,38,32,0.07); border-color: rgba(255,255,255,0.9); }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(18,18,18,0.07); border-color: rgba(255,255,255,0.9); }
   .vehicle-image-placeholder {
     aspect-ratio: 16/9; border-radius: 12px; margin-bottom: 16px;
     background:
-      repeating-linear-gradient(135deg, rgba(43,38,32,0.03) 0px, rgba(43,38,32,0.03) 2px, transparent 2px, transparent 14px),
-      linear-gradient(135deg, rgba(226,137,111,0.10), rgba(239,195,102,0.10));
+      repeating-linear-gradient(135deg, rgba(18,18,18,0.03) 0px, rgba(18,18,18,0.03) 2px, transparent 2px, transparent 14px),
+      linear-gradient(135deg, rgba(227,30,43,0.08), rgba(43,99,235,0.08));
     display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px;
     border: 1px solid var(--line);
   }
@@ -336,13 +336,13 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   }
   .hero-overlay {
     position: absolute; inset: 0; z-index: 1;
-    background: linear-gradient(180deg, rgba(43,38,32,0.10) 0%, rgba(43,38,32,0.5) 72%, rgba(43,38,32,0.78) 100%);
+    background: linear-gradient(180deg, rgba(18,18,18,0.10) 0%, rgba(18,18,18,0.5) 72%, rgba(18,18,18,0.78) 100%);
   }
   .hero-content { position: relative; z-index: 2; padding: 44px clamp(20px,4vw,48px); color: var(--paper); width: 100%; }
   .hero-content .eyebrow { color: var(--gold); }
   .hero-content h1 { color: var(--paper); }
-  .hero-content p { color: rgba(251,248,243,0.88); }
-  .hero-content .stat-strip span { color: rgba(251,248,243,0.78); }
+  .hero-content p { color: rgba(246,246,248,0.88); }
+  .hero-content .stat-strip span { color: rgba(246,246,248,0.78); }
   @media (prefers-reduced-motion: reduce) {
     .hero-slide { animation: none; transition: opacity 0.4s ease; }
     .hero-bg { transition: none !important; transform: none !important; }
@@ -493,7 +493,7 @@ async function renderLandingPage(env) {
             ${mileageText(s)}${s.transmission} &middot; ${s.fuel_type}
           </div>
         </div>
-        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; background:${s.status === 'available' ? 'rgba(127,160,132,0.22)' : 'rgba(239,195,102,0.28)'}; color:${s.status === 'available' ? '#3F5C43' : '#7A5B12'};">${s.status}</span>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; background:${s.status === 'available' ? 'rgba(18,62,145,0.16)' : 'rgba(227,30,43,0.14)'}; color:${s.status === 'available' ? '#123E91' : '#8C1620'};">${s.status}</span>
       </div>
       <div style="font-family:'Fraunces',serif; font-weight:600; font-size:22px; color:var(--sage); margin:10px 0;">R ${Number(s.retail_price).toLocaleString()}</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -718,7 +718,7 @@ async function renderLandingPage(env) {
   .hero-wrap { position: relative; }
   .diagonal-accent {
     position: absolute; top: -48px; right: -70px; width: 52%; height: 135%;
-    background: linear-gradient(135deg, rgba(226,137,111,0.6) 0%, rgba(239,195,102,0.42) 55%, transparent 100%);
+    background: linear-gradient(135deg, rgba(227,30,43,0.6) 0%, rgba(43,99,235,0.42) 55%, transparent 100%);
     clip-path: polygon(28% 0, 100% 0, 100% 100%, 0% 100%);
     filter: blur(46px); z-index: 0; pointer-events: none;
     animation: materialize 1.4s cubic-bezier(0.16,1,0.3,1) both, drift 11s ease-in-out 1.4s infinite;
@@ -773,7 +773,7 @@ async function renderLandingPage(env) {
   .search-field select {
     appearance: none; -webkit-appearance: none; width: 100%;
     font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 14px; color: var(--ink);
-    background: rgba(255,255,255,0.7) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236B6357' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+    background: rgba(255,255,255,0.7) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235C5D63' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
     border: 1px solid var(--line); border-radius: 10px; padding: 11px 34px 11px 12px; cursor: pointer;
     transition: border-color 0.15s ease, background-color 0.15s ease;
   }
@@ -922,7 +922,7 @@ async function renderBookingPage(type, url, env) {
   let vehicleContext = "";
   if (isTestDrive && stockId) {
     const item = await getStockItem(stockId, env);
-    if (item) vehicleContext = `<div class="card" style="background:rgba(127,160,132,0.12);">Booking for: <strong>${item.year} ${item.make} ${item.model}</strong></div>`;
+    if (item) vehicleContext = `<div class="card" style="background:rgba(18,62,145,0.10);">Booking for: <strong>${item.year} ${item.make} ${item.model}</strong></div>`;
   }
 
   const body = `
