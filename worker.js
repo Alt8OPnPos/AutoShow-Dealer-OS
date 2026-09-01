@@ -56,6 +56,7 @@ export default {
     if (path === "/sitemap.xml") return renderSitemap(env, url);
     if (path === "/robots.txt") return renderRobots(url);
     if (path.startsWith("/photos/")) return servePhoto(request, path, env);
+    if (path === "/api/photo-info") return servePhotoInfo(url, env);
 
     return renderLandingPage(env);
   },
@@ -131,6 +132,27 @@ async function servePhoto(request, path, env) {
   headers.set("cache-control", "public, max-age=31536000, immutable");
   headers.set("accept-ranges", "bytes");
   return new Response(object.body, { headers });
+}
+
+async function servePhotoInfo(url, env) {
+  // Temporary read-only diagnostic - lets us see what R2 actually has for a
+  // given key (size, content-type, whether it exists at all) without
+  // needing to interpret browser video-playback behavior secondhand.
+  // GET /api/photo-info?key=<r2-key>
+  const key = url.searchParams.get("key");
+  if (!key) return jsonResponse({ error: "missing ?key=" }, 400);
+
+  const head = await env.PHOTOS.head(key);
+  if (!head) return jsonResponse({ exists: false, key });
+
+  return jsonResponse({
+    exists: true,
+    key,
+    size: head.size,
+    contentType: (head.httpMetadata && head.httpMetadata.contentType) || null,
+    uploaded: head.uploaded,
+    etag: head.httpEtag,
+  });
 }
 
 async function getSimilarVehicles(item, env) {
