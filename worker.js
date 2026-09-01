@@ -264,9 +264,13 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   }
   header.scrolled { border-bottom-color: var(--line); box-shadow: 0 4px 20px rgba(18,18,18,0.05); }
   nav a {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
-    letter-spacing: 0.06em; color: var(--ink-soft); text-decoration: none; margin-left: 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--ink-soft); text-decoration: none; margin-left: 20px;
     transition: color 0.15s ease; padding-bottom: 2px; border-bottom: 1px solid transparent;
+  }
+  nav a::before {
+    content: ''; display: inline-block; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--coral); margin-right: 7px; vertical-align: middle; opacity: 0.75;
   }
   nav a:hover { color: var(--coral); border-bottom-color: var(--coral); }
   main { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
@@ -284,8 +288,8 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   }
   .btn:hover { transform: translateY(-1px); }
   .btn:active { transform: translateY(0); }
-  .btn-primary { background: var(--sage); color: white; box-shadow: 0 4px 14px rgba(18,62,145,0.3); }
-  .btn-primary:hover { box-shadow: 0 6px 18px rgba(18,62,145,0.4); }
+  .btn-primary { background: var(--coral); color: white; box-shadow: 0 4px 14px rgba(227,30,43,0.3); }
+  .btn-primary:hover { box-shadow: 0 6px 18px rgba(227,30,43,0.4); }
   .btn-whatsapp { background: #22c55e; color: white; box-shadow: 0 4px 14px rgba(34,197,94,0.28); }
   .btn-whatsapp:hover { box-shadow: 0 6px 18px rgba(34,197,94,0.38); }
   .btn-outline { background: var(--glass); color: var(--ink); border: 1px solid var(--line); }
@@ -296,6 +300,23 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   }
   .card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(18,18,18,0.07); border-color: rgba(255,255,255,0.9); }
+  /* Price is the loudest number on the card - two-tone red/navy, sized well
+     past the title and metadata around it, with a matching two-tone bar
+     echoing the logo's own black+red accent treatment. */
+  .price-tag { display: flex; align-items: baseline; gap: 3px; flex-wrap: wrap; margin: 12px 0 8px; }
+  .price-currency { font-family: 'Fraunces', serif; font-weight: 600; font-size: 17px; color: var(--sage); }
+  .price-amount { font-family: 'Fraunces', serif; font-weight: 700; font-size: 30px; letter-spacing: -0.01em; color: var(--coral); line-height: 1; }
+  .price-bar { flex-basis: 100%; height: 3px; width: 46px; border-radius: 2px; margin-top: 4px; background: linear-gradient(90deg, var(--coral) 0 50%, var(--sage) 50% 100%); }
+
+  /* Real-lot tag on vehicle photos - honest, not retouched, not staged. */
+  .vehicle-photo-link { position: relative; display: block; }
+  .lot-tag {
+    position: absolute; left: 10px; bottom: 26px; z-index: 1;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; color: #fff;
+    background: rgba(18,18,18,0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    padding: 4px 9px; border-radius: 20px; pointer-events: none;
+  }
   .vehicle-image-placeholder {
     aspect-ratio: 16/9; border-radius: 12px; margin-bottom: 16px;
     background:
@@ -376,6 +397,15 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     background: linear-gradient(180deg, rgba(18,18,18,0.10) 0%, rgba(18,18,18,0.5) 72%, rgba(18,18,18,0.78) 100%);
   }
   .hero-content { position: relative; z-index: 2; padding: 44px clamp(20px,4vw,48px); color: var(--paper); width: 100%; }
+  /* Scoped scrim behind just the text block, not the whole hero image - so
+     legibility holds regardless of what's directly behind the headline
+     (sky, a bright jacket, anything), instead of relying on the whole-image
+     wash above being dark enough at that exact spot. */
+  .hero-content::before {
+    content: ''; position: absolute; z-index: 0; inset: -12% -8% -10% -8%;
+    background: radial-gradient(120% 130% at 15% 100%, rgba(18,18,18,0.62) 0%, rgba(18,18,18,0.3) 55%, transparent 80%);
+  }
+  .hero-text { position: relative; z-index: 1; }
   .hero-content .eyebrow { color: var(--gold); }
   .hero-content h1 { color: var(--paper); }
   .hero-content p { color: rgba(246,246,248,0.88); }
@@ -502,8 +532,11 @@ async function renderLandingPage(env, url) {
 
   const carIconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 17h14M5 17a2 2 0 100 4 2 2 0 000-4zm14 0a2 2 0 100 4 2 2 0 000-4zM5 17V9l2-5h10l2 5v8"/></svg>`;
 
+  // No retouching, no stock photography - real cars on the real lot, and
+  // the card says so. Lot tag uses the real `location` field, never a
+  // fabricated bay number or timestamp.
   const vehicleMedia = (s) => s.photo_urls
-    ? `<a href="/vehicle/${s.stock_id}"><img src="${s.photo_urls}" alt="${s.year} ${s.make} ${s.model}" loading="lazy" style="width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; margin-bottom:16px; display:block;"></a>`
+    ? `<a href="/vehicle/${s.stock_id}" class="vehicle-photo-link"><img src="${s.photo_urls}" alt="${s.year} ${s.make} ${s.model}" loading="lazy" style="width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; margin-bottom:16px; display:block;"><span class="lot-tag">${(s.location || "Bloemfontein").toUpperCase()} LOT</span></a>`
     : `<a href="/vehicle/${s.stock_id}" style="text-decoration:none;"><div class="vehicle-image-placeholder">${carIconSvg}<span>Photo coming soon</span></div></a>`;
 
   const mileageText = (s) => s.mileage ? `${s.mileage.toLocaleString()} km &middot; ` : "";
@@ -534,7 +567,10 @@ async function renderLandingPage(env, url) {
         </div>
         <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; background:${s.status === 'available' ? 'rgba(18,62,145,0.16)' : 'rgba(227,30,43,0.14)'}; color:${s.status === 'available' ? '#123E91' : '#8C1620'};">${s.status}</span>
       </div>
-      <div style="font-family:'Fraunces',serif; font-weight:600; font-size:22px; color:var(--sage); margin:10px 0;">R ${Number(s.retail_price).toLocaleString()}</div>
+      <div class="price-tag">
+        <span class="price-currency">R</span><span class="price-amount">${Number(s.retail_price).toLocaleString()}</span>
+        <span class="price-bar" aria-hidden="true"></span>
+      </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <a href="/test-drive?stock_id=${s.stock_id}" class="btn btn-primary">Book Test Drive</a>
         <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi, I'm interested in the ${s.year} ${s.make} ${s.model} - is it still available?`)}" class="btn btn-whatsapp">WhatsApp Us</a>
@@ -561,9 +597,11 @@ async function renderLandingPage(env, url) {
       : "";
 
   const heroInner = `
+    <div class="hero-text">
       <div class="eyebrow materialize" style="animation-delay:0.1s;">Bloemfontein &middot; Quality Used Vehicles</div>
       <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(32px,6vw,50px); margin:0 0 14px; line-height:1.08;">Find your next car,<br>book a test drive today.</h1>
       <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:50ch; line-height:1.6;">Real stock, updated daily. Search below and book a time that works for you.</p>
+    </div>
   `;
 
   // The diagonal wash behind the hero is a soft brand-colour gradient, not a
@@ -614,7 +652,7 @@ async function renderLandingPage(env, url) {
         </div>
         <button type="button" id="find-car-btn" class="btn btn-primary search-btn">Find Car</button>
       </div>
-      <div id="stock-count" class="mono-count">${stock.length} of ${stock.length} vehicles</div>
+      <div id="stock-count" class="mono-count">Every car we have, no filler &middot; ${stock.length} vehicles</div>
     </div>
   `;
 
@@ -730,7 +768,11 @@ async function renderLandingPage(env, url) {
             card.style.display = matches ? '' : 'none';
             if (matches) visible++;
           });
-          if (countEl) countEl.textContent = visible + ' of ' + cards.length + ' vehicles';
+          if (countEl) {
+            countEl.textContent = visible === cards.length
+              ? 'Every car we have, no filler · ' + cards.length + ' vehicles'
+              : visible + ' of ' + cards.length + ' vehicles';
+          }
           if (emptyEl) emptyEl.style.display = visible === 0 ? 'block' : 'none';
         }
 
@@ -812,13 +854,16 @@ async function renderLandingPage(env, url) {
   .search-field select {
     appearance: none; -webkit-appearance: none; width: 100%;
     font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 14px; color: var(--ink);
-    background: rgba(255,255,255,0.7) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235C5D63' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+    background: rgba(255,255,255,0.7) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23E31E2B' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
     border: 1px solid var(--line); border-radius: 10px; padding: 11px 34px 11px 12px; cursor: pointer;
     transition: border-color 0.15s ease, background-color 0.15s ease;
   }
-  .search-field select:hover { border-color: var(--ink-soft); }
-  .search-field select:focus { border-color: var(--sage); }
-  .search-btn { white-space: nowrap; align-self: flex-end; }
+  .search-field select:hover { border-color: var(--coral); }
+  .search-field select:focus { border-color: var(--coral); }
+  .search-btn {
+    white-space: nowrap; align-self: flex-end; border-radius: 0; padding: 13px 28px;
+    clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  }
   .mono-count {
     font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft);
     white-space: nowrap; align-self: center; margin-left: auto;
@@ -869,7 +914,7 @@ async function renderVehiclePage(path, env, url) {
     <a href="/vehicle/${s.stock_id}" style="text-decoration:none; color:inherit;">
       <div class="card">
         <div style="font-weight:700;">${s.year} ${s.make} ${s.model}</div>
-        <div style="font-family:'Fraunces',serif; color:var(--sage); font-weight:600;">R ${Number(s.retail_price).toLocaleString()}</div>
+        <div style="font-family:'Fraunces',serif; color:var(--coral); font-weight:700; font-size:17px;">R ${Number(s.retail_price).toLocaleString()}</div>
       </div>
     </a>
   `).join("");
@@ -879,7 +924,10 @@ async function renderVehiclePage(path, env, url) {
       ${item.photo_urls ? `<img src="${item.photo_urls}" alt="${vehicleTitle}" style="width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; margin-bottom:18px;">` : ""}
       <div class="eyebrow">${item.condition}</div>
       <h1>${vehicleTitle}</h1>
-      <div style="font-family:'Fraunces',serif; font-size:26px; color:var(--sage); font-weight:600; margin:10px 0;">R ${price.toLocaleString()}</div>
+      <div class="price-tag" style="margin:10px 0 8px;">
+        <span class="price-currency" style="font-size:19px;">R</span><span class="price-amount" style="font-size:34px;">${price.toLocaleString()}</span>
+        <span class="price-bar" aria-hidden="true"></span>
+      </div>
       <p style="color:var(--ink-soft);">${item.mileage ? item.mileage.toLocaleString() + ' km &middot; ' : ''}${item.transmission} &middot; ${item.fuel_type} &middot; ${item.location}</p>
       <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
         <a href="/test-drive?stock_id=${item.stock_id}" class="btn btn-primary" aria-label="Book a test drive for this ${vehicleTitle}">Book Test Drive</a>
