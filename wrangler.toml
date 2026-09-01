@@ -1,13 +1,8 @@
 name = "autoshow-dealer-os"
-main = "worker.js"
-compatibility_date = "2026-08-27"
-workers_dev = true
-
-[[d1_databases]]
-binding = "DB"
-database_name = "dealer_os"
-database_id = "f0263076-679a-486a-abe7-233db65620ac"
-
+compatibility_date = "2024-01-01"
 [[r2_buckets]]
-binding = "PHOTOS"
-bucket_name = "autoshow-vehicle-photos"
+binding = "ASSETS"
+bucket_name = "auto-show-assets"
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"
