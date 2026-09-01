@@ -1,6 +1,7 @@
 name = "autoshow-dealer-os"
 main = "worker.js"
 compatibility_date = "2026-08-27"
+workers_dev = true
 
 [[d1_databases]]
 binding = "DB"
