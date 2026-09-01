@@ -19,13 +19,14 @@ const DEALER_ID = "autoshow-bloemfontein";
 const WHATSAPP_NUMBER = "27761021676"; // AutoShow's real WhatsApp number
 
 // R2 keys of videos to autoplay muted/looped behind the hero as a
-// crossfading slideshow at reduced opacity. Upload these exact files to R2
-// (dashboard -> autoshow-vehicle-photos -> Upload) with these exact names -
-// no code change needed after that. Leave the array empty to fall back to
-// the real floor-stock photo slideshow instead.
+// crossfading slideshow at reduced opacity. These live inside the
+// "DealerOS images/" folder in the autoshow-vehicle-photos bucket, so the
+// prefix is part of the key - R2 "folders" are just key prefixes, there's
+// no real subfolder. Leave the array empty to fall back to the real
+// floor-stock photo slideshow instead.
 const HERO_VIDEO_KEYS = [
-  "500930063_1788189877930701.mp4",
-  "691950586_1788189700216226.mp4",
+  "DealerOS images/500930063_1788189877930701.mp4",
+  "DealerOS images/691950586_1788189700216226.mp4",
 ];
 
 // AutoShow brand: red/black/blue/white. Keep these exact values across
