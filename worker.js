@@ -18,6 +18,11 @@
 const DEALER_ID = "autoshow-bloemfontein";
 const WHATSAPP_NUMBER = "27761021676"; // AutoShow's real WhatsApp number
 
+// R2 key of the real AutoShow logo (transparent background), same
+// "DealerOS images/" folder as the hero videos. Leave "" to fall back to
+// the generated text wordmark instead.
+const LOGO_KEY = "DealerOS images/269591182_104228588833703_8728799146245725977_n-removebg-preview.png";
+
 // R2 keys of videos to autoplay muted/looped behind the hero as a
 // crossfading slideshow at reduced opacity. These live inside the
 // "DealerOS images/" folder in the autoshow-vehicle-photos bucket, so the
@@ -195,9 +200,12 @@ async function handleBookAppointment(request, env) {
 // ---------------------------------------------------------------------------
 
 function logoMark() {
-  // Re-angles the gradient sweep on every request so the wordmark never
-  // renders as a flat, identical bitmap twice - a lightweight generative
-  // treatment that needs no external image tool.
+  if (LOGO_KEY) {
+    return `<a href="/" class="logo-link" aria-label="AutoShow Bloemfontein"><img class="logo-image" src="/photos/${encodeURIComponent(LOGO_KEY)}" alt="AutoShow Bloemfontein"></a>`;
+  }
+  // Fallback if LOGO_KEY is ever cleared: re-angles the gradient sweep on
+  // every request so the wordmark never renders as a flat, identical
+  // bitmap twice - a lightweight generative treatment needing no image.
   const angle = Math.floor(Math.random() * 360);
   return `<a href="/" class="logo-mark" style="--logo-angle:${angle}deg;">AUTOSHOW<span class="dot">.</span></a>`;
 }
@@ -309,9 +317,15 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   input:focus, select:focus, textarea:focus { border-color: var(--sage); }
   label { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); display: block; margin-bottom: 6px; }
 
+  /* Real AutoShow logo mark (transparent PNG from R2). */
+  .logo-link { display: inline-flex; align-items: center; transition: transform 0.15s ease, opacity 0.15s ease; }
+  .logo-link:hover { transform: translateY(-1px); opacity: 0.9; }
+  .logo-image { display: block; height: 40px; width: auto; }
+
   /* Generated brand mark - an ink wordmark with a coral gleam that sweeps
      across it, re-angled per page load. Coral stays the only accent, same
-     as the static dot always was - this is motion, not a new palette. */
+     as the static dot always was - this is motion, not a new palette.
+     Fallback only, used when LOGO_KEY is empty. */
   .logo-mark {
     font-family: 'Fraunces', serif; font-weight: 700; font-size: 21px; text-decoration: none;
     letter-spacing: -0.01em; display: inline-block; background-size: 220% auto; color: var(--ink);
