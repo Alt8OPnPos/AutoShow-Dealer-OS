@@ -58,13 +58,13 @@ export default {
     if (path.startsWith("/vehicle/")) return renderVehiclePage(path, env, url);
     if (path === "/test-drive") return renderBookingPage("test_drive", url, env);
     if (path === "/evaluate") return renderBookingPage("valuation", url, env);
-    if (path === "/dashboard") return renderDashboard(env);
+    if (path === "/dashboard") return renderDashboard(env, url);
     if (path === "/sitemap.xml") return renderSitemap(env, url);
     if (path === "/robots.txt") return renderRobots(url);
     if (path.startsWith("/photos/")) return servePhoto(request, path, env);
     if (path === "/api/photo-info") return servePhotoInfo(url, env);
 
-    return renderLandingPage(env);
+    return renderLandingPage(env, url);
   },
 };
 
@@ -210,7 +210,7 @@ function logoMark() {
   return `<a href="/" class="logo-mark" style="--logo-angle:${angle}deg;">AUTOSHOW<span class="dot">.</span></a>`;
 }
 
-function pageShell(title, bodyContent, extraHead = "", og = {}) {
+function pageShell(title, bodyContent, extraHead = "", og = {}, debugMode = false) {
   const ogTitle = og.ogTitle || `${title} | AutoShow Bloemfontein`;
   const ogDescription = og.ogDescription || "Quality used vehicles in Bloemfontein. Book a test drive or trade in your car today.";
   const ogUrl = og.ogUrl || "";
@@ -480,6 +480,7 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   <a href="https://wa.me/${WHATSAPP_NUMBER}" style="color:var(--coral);">WhatsApp ${WHATSAPP_NUMBER}</a>
   &middot; <a href="https://www.facebook.com/autoshowbloemfontein" style="color:var(--coral);">Read our reviews on Facebook</a>
 </footer>
+${debugMode ? `<script src="https://cdn.jsdelivr.net/npm/eruda@3"></script><script>eruda.init();</script>` : ""}
 </body>
 </html>`;
 }
@@ -495,7 +496,8 @@ function jsonResponse(data, status = 200) {
 // Pages
 // ---------------------------------------------------------------------------
 
-async function renderLandingPage(env) {
+async function renderLandingPage(env, url) {
+  const debugMode = url.searchParams.get("debug") === "1";
   const stock = await getStock(env);
 
   const carIconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 17h14M5 17a2 2 0 100 4 2 2 0 000-4zm14 0a2 2 0 100 4 2 2 0 000-4zM5 17V9l2-5h10l2 5v8"/></svg>`;
@@ -829,10 +831,11 @@ async function renderLandingPage(env) {
   }
   `, {
     ogDescription: "Real stock, updated daily. Book a test drive or trade in your car at AutoShow Bloemfontein.",
-  }), { headers: { "Content-Type": "text/html" } });
+  }, debugMode), { headers: { "Content-Type": "text/html" } });
 }
 
 async function renderVehiclePage(path, env, url) {
+  const debugMode = url.searchParams.get("debug") === "1";
   const stockId = path.split("/vehicle/")[1];
   const item = await getStockItem(stockId, env);
   if (!item) return new Response("Vehicle not found", { status: 404 });
@@ -945,10 +948,11 @@ async function renderVehiclePage(path, env, url) {
     ogTitle: vehicleTitle,
     ogDescription: `R ${price.toLocaleString()} - ${item.mileage ? item.mileage.toLocaleString() + 'km ' : ''}${item.transmission} ${item.fuel_type}`,
     ogUrl: url.toString(),
-  }), { headers: { "Content-Type": "text/html" } });
+  }, debugMode), { headers: { "Content-Type": "text/html" } });
 }
 
 async function renderBookingPage(type, url, env) {
+  const debugMode = url.searchParams.get("debug") === "1";
   const stockId = url.searchParams.get("stock_id") || "";
   const isTestDrive = type === "test_drive";
   const title = isTestDrive ? "Book a Test Drive" : "Get a Trade-In Evaluation";
@@ -1017,7 +1021,7 @@ async function renderBookingPage(type, url, env) {
       });
     </script>
   `;
-  return new Response(pageShell(title, body), { headers: { "Content-Type": "text/html" } });
+  return new Response(pageShell(title, body, "", {}, debugMode), { headers: { "Content-Type": "text/html" } });
 }
 
 async function renderSitemap(env, url) {
@@ -1041,7 +1045,8 @@ function renderRobots(url) {
   });
 }
 
-async function renderDashboard(env) {
+async function renderDashboard(env, url) {
+  const debugMode = url.searchParams.get("debug") === "1";
   const stock = await getStock(env);
   const leads = await getLeads(env);
   const { results: appointments } = await env.DB.prepare(
@@ -1070,5 +1075,5 @@ async function renderDashboard(env) {
       </div>
     `).join("")}
   `;
-  return new Response(pageShell("Dashboard", body), { headers: { "Content-Type": "text/html" } });
+  return new Response(pageShell("Dashboard", body, "", {}, debugMode), { headers: { "Content-Type": "text/html" } });
 }
