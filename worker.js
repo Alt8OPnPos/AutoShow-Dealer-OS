@@ -34,6 +34,32 @@ const HERO_VIDEO_KEYS = [
   "DealerOS images/691950586_1788189700216226.mp4",
 ];
 
+// Real floor-stock photos, uploaded directly to R2 under floor/ - these are
+// the actual cars on the actual lot right now. Used for the "From the
+// Floor" gallery so it always shows real photos, independent of which
+// stock rows currently have a D1 photo_urls value set.
+const FLOOR_GALLERY_KEYS = [
+  "floor/auto_show_bloemfontein_lot.webp",
+  "floor/blue_ford_figo_dealership.webp",
+  "floor/blue_ford_figo_hatchback.webp",
+  "floor/red_renault_sandero_stepway.webp",
+  "floor/silver_corolla_dealership.webp",
+  "floor/silver_corolla_dealership_1.webp",
+  "floor/silver_toyota_yaris.webp",
+  "floor/silver_yaris_dealership.webp",
+  "floor/white_nissan_micra_dealership.webp",
+  "floor/white_nissan_micra_dealership_1.webp",
+  "floor/white_polo_vivo.webp",
+];
+
+// Ambient background audio - autoplay-with-sound is blocked by every
+// browser anyway, so this starts on the visitor's first pointer/touch/click
+// instead, loops quietly, and stays user-controllable via the mute toggle
+// in the header. R2 key of a compressed mp3; leave "" to disable entirely.
+// NOTE: this key isn't confirmed uploaded to R2 yet - the toggle and player
+// are wired either way, they'll just have nothing to play until it lands.
+const AMBIENT_AUDIO_KEY = "audio/autoshow_bg_compressed.mp3";
+
 // AutoShow brand: red/black/blue/white. Keep these exact values across
 // future builds/redesigns - layout and features can change, these can't.
 const BRAND = {
@@ -364,6 +390,16 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   .logo-link:hover { transform: translateY(-1px); opacity: 0.9; }
   .logo-image { display: block; height: 40px; width: auto; }
 
+  /* Ambient background audio toggle - small, unobtrusive, header-mounted. */
+  .ambient-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line);
+    background: rgba(255,255,255,0.7); color: var(--ink-soft); cursor: pointer;
+    margin-left: 14px; transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .ambient-toggle:hover { border-color: var(--coral); color: var(--coral); }
+  .ambient-toggle svg { width: 16px; height: 16px; }
+
   /* Generated brand mark - an ink wordmark with a coral gleam that sweeps
      across it, re-angled per page load. Coral stays the only accent, same
      as the static dot always was - this is motion, not a new palette.
@@ -512,6 +548,43 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
         });
       }
     }
+
+    // Ambient background audio - starts on the visitor's first interaction
+    // (browsers block autoplay-with-sound outright, so there's no point
+    // trying), loops quietly, and stays user-controllable via the toggle.
+    (function () {
+      const audio = document.getElementById('ambient-audio');
+      const toggle = document.getElementById('ambient-toggle');
+      if (!audio || !toggle) return;
+
+      audio.volume = 0.22;
+
+      let userMuted = false;
+      try { userMuted = localStorage.getItem('autoshow_ambient_muted') === '1'; } catch (e) {}
+
+      function setIcon(muted) {
+        toggle.querySelector('.icon-sound-on').style.display = muted ? 'none' : '';
+        toggle.querySelector('.icon-sound-off').style.display = muted ? '' : 'none';
+        toggle.setAttribute('aria-pressed', String(!muted));
+      }
+      setIcon(userMuted);
+
+      function startOnce() {
+        if (!userMuted) audio.play().catch(() => {});
+        ['pointerdown', 'touchstart', 'click'].forEach((evt) => document.removeEventListener(evt, startOnce));
+      }
+      if (!prefersReducedMotion) {
+        ['pointerdown', 'touchstart', 'click'].forEach((evt) => document.addEventListener(evt, startOnce, { once: true }));
+      }
+
+      toggle.addEventListener('click', () => {
+        userMuted = !userMuted;
+        try { localStorage.setItem('autoshow_ambient_muted', userMuted ? '1' : '0'); } catch (e) {}
+        setIcon(userMuted);
+        if (userMuted) audio.pause();
+        else audio.play().catch(() => {});
+      });
+    })();
   });
 </script>
 </head>
@@ -523,8 +596,13 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     <a href="/#stock">Stock</a>
     <a href="/evaluate">Sell / Trade-In</a>
     <a href="https://wa.me/${WHATSAPP_NUMBER}">WhatsApp</a>
+    <button type="button" id="ambient-toggle" class="ambient-toggle" aria-label="Toggle background sound" aria-pressed="false" title="Toggle background sound">
+      <svg class="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18 6a9 9 0 010 12"/></svg>
+      <svg class="icon-sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:none;"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M23 9l-6 6M17 9l6 6"/></svg>
+    </button>
   </nav>
 </header>
+${AMBIENT_AUDIO_KEY ? `<audio id="ambient-audio" src="/photos/${encodeURIComponent(AMBIENT_AUDIO_KEY)}" loop preload="none"></audio>` : ""}
 <main id="main-content">${bodyContent}</main>
 <footer style="max-width:1100px; margin:40px auto 0; padding:20px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft);">
   AutoShow Bloemfontein &middot; 190 Oliver Tambo Road, Oranjesig &middot;
@@ -692,32 +770,58 @@ async function renderLandingPage(env, url) {
     </div>
     <div id="stock-empty" class="card" style="display:none; text-align:center;">No vehicles match those filters right now &mdash; try widening your search.</div>
 
-    ${heroPhotos.length >= 3 ? `
     <div class="reveal" style="margin-top:48px;">
       <h2 style="font-size:24px; margin-bottom:6px;">From the Floor</h2>
-      <p style="color:var(--ink-soft); font-size:14px; margin-top:0; max-width:56ch;">Real, random shots from what's on the lot right now &mdash; no stock photography.</p>
+      <p style="color:var(--ink-soft); font-size:14px; margin-top:0; max-width:56ch;">Real shots from what's on the lot right now &mdash; no stock photography.</p>
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:16px;">
-        ${heroSlides.map(src => `
+        ${FLOOR_GALLERY_KEYS.map(key => `
           <div class="card tilt-card" style="padding:0; overflow:hidden;">
-            <img src="${src}" alt="A vehicle on the AutoShow floor" loading="lazy" style="width:100%; aspect-ratio:1; object-fit:cover; display:block;">
+            <img src="/photos/${encodeURIComponent(key)}" alt="A vehicle on the AutoShow floor" loading="lazy" style="width:100%; aspect-ratio:1; object-fit:cover; display:block;">
           </div>
         `).join("")}
       </div>
     </div>
-    ` : `
-    <div class="reveal" style="margin-top:48px;">
-      <h2 style="font-size:24px; margin-bottom:6px;">Real Customers, Real Handovers</h2>
-      <p style="color:var(--ink-soft); font-size:14px; margin-top:0; max-width:56ch;">Every AutoShow sale ends with keys in hand, not just a receipt. Ask us for references from any of these buyers.</p>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:16px;">
-        ${[1,2,3,4].map(() => `
-          <div class="vehicle-image-placeholder" style="aspect-ratio:1;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
-            <span>Customer photo</span>
-          </div>
-        `).join("")}
+
+    <div class="card reveal finance-card" style="margin-top:34px;">
+      <div class="finance-badge">70% Deposit</div>
+      <div class="eyebrow" style="margin-top:14px;">Customer First &middot; Faith Before Finance</div>
+      <h2 style="margin:4px 0 6px; font-size:22px;">See what you'd still need in cash</h2>
+      <p style="color:var(--ink-soft); font-size:14px; max-width:56ch; margin-top:0;">
+        AutoShow works with a 70% deposit as standard. Your trade-in can cover part of that
+        deposit &mdash; put in your numbers below and watch it fill in real time.
+      </p>
+
+      <div class="finance-grid">
+        <div>
+          <label for="fin-deposit">Required Deposit (R)</label>
+          <input type="number" id="fin-deposit" min="0" value="70000">
+          <label for="fin-tradein">Your Trade-In Value (R)</label>
+          <input type="number" id="fin-tradein" min="0" value="0">
+        </div>
+        <div class="cargo-bay" id="cargo-bay">
+          <div class="cargo-fill" id="cargo-fill"></div>
+          <span class="cargo-label" id="cargo-label">0% covered</span>
+        </div>
+      </div>
+
+      <div id="fin-result" class="fin-result">Cash still needed: R 70,000</div>
+
+      <button type="button" id="rejected-btn" class="btn btn-outline" style="margin-top:14px;">Previously Rejected? Talk To Us</button>
+    </div>
+
+    <div id="rejected-modal" class="modal-backdrop" hidden>
+      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="rejected-modal-title">
+        <button type="button" id="rejected-modal-close" class="modal-close" aria-label="Close">&times;</button>
+        <div class="eyebrow">Customer First</div>
+        <h2 id="rejected-modal-title" style="margin-top:6px;">Been turned down before? Let's talk anyway.</h2>
+        <p style="color:var(--ink-soft);">
+          A previous rejection somewhere else doesn't decide your outcome with us. We look at real
+          circumstances, not just a score &mdash; message us on WhatsApp and we'll walk through your
+          options honestly, no obligation.
+        </p>
+        <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi, I was previously turned down for finance elsewhere and I'd like to talk through my options with AutoShow.")}" class="btn btn-whatsapp" style="width:100%; justify-content:center;">Talk To Us on WhatsApp</a>
       </div>
     </div>
-    `}
 
     <div class="card reveal" style="text-align:center; margin-top:30px;">
       <p style="margin-top:0;">Know someone looking for a car?</p>
@@ -813,6 +917,43 @@ async function renderLandingPage(env, url) {
         }
       })();
     </script>
+
+    <script>
+      // Finance teaser: live "cash still needed" (deposit minus trade-in
+      // credit), a cargo-bay bar that fills to match how much of the
+      // deposit the trade-in covers, and the "previously rejected" modal.
+      (function () {
+        const depositEl = document.getElementById('fin-deposit');
+        const tradeinEl = document.getElementById('fin-tradein');
+        const resultEl = document.getElementById('fin-result');
+        const fillEl = document.getElementById('cargo-fill');
+        const labelEl = document.getElementById('cargo-label');
+        if (!depositEl || !tradeinEl) return;
+
+        function calcFinance() {
+          const deposit = Math.max(parseFloat(depositEl.value) || 0, 0);
+          const tradein = Math.max(parseFloat(tradeinEl.value) || 0, 0);
+          const remaining = Math.max(deposit - tradein, 0);
+          const covered = deposit > 0 ? Math.min(tradein / deposit, 1) : 0;
+
+          resultEl.textContent = 'Cash still needed: R ' + Math.round(remaining).toLocaleString();
+          if (fillEl) fillEl.style.width = (covered * 100).toFixed(0) + '%';
+          if (labelEl) labelEl.textContent = (covered * 100).toFixed(0) + '% covered';
+        }
+        [depositEl, tradeinEl].forEach((el) => el.addEventListener('input', calcFinance));
+        calcFinance();
+
+        const modal = document.getElementById('rejected-modal');
+        const openBtn = document.getElementById('rejected-btn');
+        const closeBtn = document.getElementById('rejected-modal-close');
+        if (modal && openBtn && closeBtn) {
+          openBtn.addEventListener('click', () => { modal.hidden = false; });
+          closeBtn.addEventListener('click', () => { modal.hidden = true; });
+          modal.addEventListener('click', (e) => { if (e.target === modal) modal.hidden = true; });
+          document.addEventListener('keydown', (e) => { if (e.key === 'Escape') modal.hidden = true; });
+        }
+      })();
+    </script>
   `;
   return new Response(pageShell("Home", body, `
   /* Diagonal brand-colour wash behind the hero - soft and blurred rather
@@ -895,6 +1036,50 @@ async function renderLandingPage(env, url) {
     .search-btn { width: 100%; justify-content: center; }
     .mono-count { margin-left: 0; }
   }
+
+  /* Finance teaser: deposit badge, cargo-bay fill bar, "previously
+     rejected" modal. */
+  .finance-card { position: relative; overflow: hidden; }
+  .finance-badge {
+    display: inline-flex; align-items: center; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: #fff; background: linear-gradient(90deg, var(--coral), var(--sage));
+    padding: 6px 14px; border-radius: 20px;
+  }
+  .finance-grid { display: grid; grid-template-columns: 1fr; gap: 18px; margin-top: 16px; }
+  @media (min-width: 640px) { .finance-grid { grid-template-columns: 1.1fr 0.9fr; align-items: center; } }
+  .cargo-bay {
+    position: relative; height: 46px; border-radius: 10px; overflow: hidden;
+    background:
+      repeating-linear-gradient(135deg, rgba(18,18,18,0.04) 0px, rgba(18,18,18,0.04) 2px, transparent 2px, transparent 12px),
+      rgba(18,18,18,0.05);
+    border: 1px solid var(--line); display: flex; align-items: center; justify-content: center;
+  }
+  .cargo-fill {
+    position: absolute; inset: 0 auto 0 0; width: 0%;
+    background: linear-gradient(90deg, var(--sage), var(--coral));
+    transition: width 0.5s cubic-bezier(0.16,1,0.3,1); border-radius: 10px 0 0 10px;
+  }
+  .cargo-bay:hover .cargo-fill { filter: brightness(1.08); }
+  .cargo-label {
+    position: relative; z-index: 1; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700; color: var(--ink); mix-blend-mode: multiply;
+  }
+  .fin-result { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; color: var(--coral); margin-top: 16px; }
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(18,18,18,0.55); backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px;
+  }
+  .modal-backdrop[hidden] { display: none; }
+  .modal-box {
+    position: relative; background: var(--paper); border-radius: 18px; padding: 28px;
+    max-width: 440px; width: 100%; box-shadow: 0 20px 60px rgba(18,18,18,0.3);
+  }
+  .modal-close {
+    position: absolute; top: 12px; right: 14px; background: none; border: none;
+    font-size: 22px; line-height: 1; cursor: pointer; color: var(--ink-soft);
+  }
+  .modal-close:hover { color: var(--coral); }
   `, {
     ogDescription: "Real stock, updated daily. Book a test drive or trade in your car at AutoShow Bloemfontein.",
   }, debugMode), { headers: { "Content-Type": "text/html" } });
