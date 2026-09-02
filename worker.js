@@ -17,6 +17,7 @@
 
 const DEALER_ID = "autoshow-bloemfontein";
 const WHATSAPP_NUMBER = "27761021676"; // AutoShow's real WhatsApp number
+const WHATSAPP_DISPLAY = "076 102 1676"; // Same number, local display format
 
 // R2 key of the real AutoShow logo (transparent background), same
 // "DealerOS images/" folder as the hero videos. Leave "" to fall back to
@@ -71,6 +72,10 @@ const FLOOR_GALLERY_KEYS = [
 // in the header. R2 key of a compressed mp3; leave "" to disable entirely.
 // Confirmed uploaded to R2.
 const AMBIENT_AUDIO_KEY = "audio/autoshow_bg_compressed.mp3";
+
+// Team photo for the "brick lot" story section. Not confirmed uploaded to
+// R2 yet - existence-checked at render time, same as the video keys.
+const TEAM_PHOTO_KEY = "team/auto_show_team_photo.webp";
 
 // AutoShow brand: red/black/blue/white. Keep these exact values across
 // future builds/redesigns - layout and features can change, these can't.
@@ -425,6 +430,12 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     text-transform: uppercase; letter-spacing: 0.04em;
   }
   .ambient-toggle:hover { border-color: var(--coral); color: var(--coral); }
+  .nav-phone {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(246,246,248,0.55);
+    margin-left: 20px; white-space: nowrap;
+  }
+  .nav-whatsapp-btn { margin-left: 14px; padding: 9px 18px; font-size: 12px; }
+  @media (max-width: 900px) { .nav-phone { display: none; } }
   .ambient-toggle svg { width: 16px; height: 16px; flex-shrink: 0; }
   .ambient-toggle .ambient-hint {
     font-weight: 500; text-transform: none; letter-spacing: normal; color: var(--ink-soft);
@@ -446,6 +457,30 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   .logo-mark .dot { -webkit-text-fill-color: var(--coral); color: var(--coral); }
   @keyframes logoShine { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
   @media (prefers-reduced-motion: reduce) { .logo-mark { animation: none; } }
+
+  /* Site footer - dark, matching the header, with real (not placeholder)
+     contact details. */
+  .site-footer { background: #0A0A0A; color: rgba(246,246,248,0.65); margin-top: 60px; padding: 44px 20px 24px; }
+  .site-footer a { color: rgba(246,246,248,0.65); }
+  .site-footer .logo-image { filter: brightness(1.15); }
+  .site-footer-inner {
+    max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 28px;
+    font-size: 13px; line-height: 1.7;
+  }
+  @media (min-width: 800px) { .site-footer-inner { grid-template-columns: 1.6fr 1fr 1fr 1fr; } }
+  .site-footer-brand p { max-width: 42ch; margin: 14px 0 0; color: rgba(246,246,248,0.5); font-size: 13px; }
+  .site-footer-inner a { display: block; text-decoration: none; margin-top: 4px; }
+  .site-footer-inner a:hover { color: var(--coral); }
+  .footer-col-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: rgba(246,246,248,0.35); margin-bottom: 8px;
+  }
+  .site-footer-cta { max-width: 1100px; margin: 30px auto 0; }
+  .site-footer-copyright {
+    max-width: 1100px; margin: 20px auto 0; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.08);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(246,246,248,0.35);
+  }
+  .site-footer-copyright a { color: rgba(246,246,248,0.35); text-decoration: underline; }
 
   /* Scroll-reveal: sections and cards ease in as they enter view, so
      nothing on the page reads as static once you start scrolling. */
@@ -508,6 +543,21 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   .hero-content .live-badge { color: rgba(246,246,248,0.85); }
   .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.7); }
   .hero-content .stat-strip span { color: rgba(246,246,248,0.78); }
+
+  .hero-caption {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); opacity: 0.7;
+  }
+  .hero-content .hero-caption { color: rgba(246,246,248,0.6); }
+
+  .hero-stats { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .hero-content .hero-stats { border-top-color: rgba(255,255,255,0.15); }
+  .hero-stats > div { display: flex; flex-direction: column; gap: 2px; }
+  .hero-stats strong { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; }
+  .hero-stats span {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-soft);
+  }
+  .hero-content .hero-stats span { color: rgba(246,246,248,0.65); }
   @media (prefers-reduced-motion: reduce) {
     .hero-slide { animation: none; transition: opacity 0.4s ease; }
     .hero-bg { transition: none !important; transform: none !important; }
@@ -641,9 +691,12 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   <div class="header-inner">
     ${logoMark()}
     <nav aria-label="Main navigation">
-      <a href="/#stock">Stock</a>
-      <a href="/evaluate">Sell / Trade-In</a>
-      <a href="https://wa.me/${WHATSAPP_NUMBER}">WhatsApp</a>
+      <a href="/#stock">Inventory</a>
+      <a href="/#finance">Finance</a>
+      <a href="/#floor">From The Floor</a>
+      <a href="/#values">Values</a>
+      <span class="nav-phone">${WHATSAPP_DISPLAY}</span>
+      <a href="https://wa.me/${WHATSAPP_NUMBER}" class="btn btn-whatsapp nav-whatsapp-btn">WhatsApp Now</a>
       <button type="button" id="ambient-toggle" class="ambient-toggle" aria-label="Toggle background sound" aria-pressed="false" title="Tap to mute / unmute">
         <svg class="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18 6a9 9 0 010 12"/></svg>
         <svg class="icon-sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:none;"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M23 9l-6 6M17 9l6 6"/></svg>
@@ -655,11 +708,33 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
 </header>
 ${AMBIENT_AUDIO_KEY ? `<audio id="ambient-audio" src="/photos/${encodeURIComponent(AMBIENT_AUDIO_KEY)}" loop preload="none"></audio>` : ""}
 <main id="main-content">${bodyContent}</main>
-<footer style="max-width:1100px; margin:40px auto 0; padding:20px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft);">
-  AutoShow Bloemfontein &middot; 1 &amp; 3 Harvey Road, Bloemfontein &middot;
-  <a href="https://wa.me/${WHATSAPP_NUMBER}" style="color:var(--coral);">WhatsApp ${WHATSAPP_NUMBER}</a>
-  &middot; <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi, I'd like directions to 1 & 3 Harvey Road.")}" style="color:var(--coral);">Get Directions</a>
-  &middot; <a href="https://www.facebook.com/autoshowbloemfontein" style="color:var(--coral);">Read our reviews on Facebook</a>
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div class="site-footer-brand">
+      ${logoMark()}
+      <p>Quality used cars, straight from our brick lot at 1 &amp; 3 Harvey Road, Bloemfontein. Zero-volume video backgrounds, WhatsApp-first sales. Customer first, always.</p>
+    </div>
+    <div>
+      <div class="footer-col-label">Visit</div>
+      <div>1 &amp; 3 Harvey Road<br>Bloemfontein</div>
+      <div style="margin-top:8px; color:var(--ink-soft);">Mon&ndash;Fri 8am&ndash;5:30pm<br>Sat 8am&ndash;1pm</div>
+    </div>
+    <div>
+      <div class="footer-col-label">Call</div>
+      <div>${WHATSAPP_DISPLAY}</div>
+      <a href="https://wa.me/${WHATSAPP_NUMBER}">WhatsApp Us</a>
+    </div>
+    <div>
+      <div class="footer-col-label">Quick Links</div>
+      <a href="/#stock">Inventory</a>
+      <a href="/#finance">70% Deposit Calculator</a>
+      <a href="/#floor">From The Floor</a>
+    </div>
+  </div>
+  <div class="site-footer-cta">
+    <a href="https://wa.me/${WHATSAPP_NUMBER}" class="btn btn-whatsapp">WhatsApp ${WHATSAPP_DISPLAY}</a>
+  </div>
+  <div class="site-footer-copyright">&copy; ${new Date().getFullYear()} AutoShow Bloemfontein &middot; Brick lot, real stock. <a href="https://www.facebook.com/autoshowbloemfontein">Read our reviews on Facebook</a></div>
 </footer>
 ${debugMode ? `<script src="https://cdn.jsdelivr.net/npm/eruda@3"></script><script>eruda.init();</script>` : ""}
 </body>
@@ -692,6 +767,8 @@ async function renderLandingPage(env, url) {
   const floorSectionVideo = floorVideoExists
     ? `<video class="floor-section-video" autoplay muted loop playsinline preload="auto"><source src="/photos/${encodeURIComponent(FLOOR_SECTION_VIDEO_KEY)}" type="video/mp4"></video><div class="floor-section-overlay"></div>`
     : "";
+
+  const teamPhotoExists = await env.PHOTOS.head(TEAM_PHOTO_KEY).then((h) => !!h).catch(() => false);
 
   const carIconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 17h14M5 17a2 2 0 100 4 2 2 0 000-4zm14 0a2 2 0 100 4 2 2 0 000-4zM5 17V9l2-5h10l2 5v8"/></svg>`;
 
@@ -761,17 +838,28 @@ async function renderLandingPage(env, url) {
       : "";
 
   const liveBadge = `<div class="live-badge materialize" style="animation-delay:0.05s;"><span class="live-dot pulse-dot" aria-hidden="true"></span>Live on Harvey Road &middot; Brick &amp; Mortar Stock Only</div>`;
-  const heroCta = `<a href="#stock" class="btn btn-primary">Browse ${stock.length} Live Vehicle${stock.length === 1 ? "" : "s"} &rarr;</a>`;
+  const heroCtaRow = `
+    <div class="materialize" style="animation-delay:0.5s; margin-top:16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <a href="#stock" class="btn btn-primary">Browse ${stock.length} Live Vehicle${stock.length === 1 ? "" : "s"} &rarr;</a>
+      <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi, I'd like to book a viewing at your Harvey Road lot.")}" class="btn btn-outline">Book Viewing on WhatsApp</a>
+      <span class="hero-caption">Zero-volume video &bull; MP3 audio only</span>
+    </div>
+  `;
+  const heroStats = `
+    <div class="hero-stats materialize" style="animation-delay:0.6s;">
+      <div><strong>70%</strong><span>Deposit Model</span></div>
+      <div><strong>On-Site</strong><span>Real Stock</span></div>
+      <div><strong>In-House</strong><span>Finance Help</span></div>
+    </div>
+  `;
 
   const heroInner = `
     <div class="hero-text">
       ${liveBadge}
       <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(32px,6vw,50px); margin:14px 0 14px; line-height:1.08;">Quality Used Cars,<br><em>Straight From Our</em><br>Brick Lot.</h1>
       <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:52ch; line-height:1.6;">Every car you see is parked on our lot at 1 &amp; 3 Harvey Road. Physically inspected, serviced, and ready to test-drive today. No catalogue cars. No middlemen. Just honest, on-the-floor stock priced to move in Bloemfontein.</p>
-      <div class="materialize" style="animation-delay:0.5s; margin-top:16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-        <div class="finance-badge">70% Deposit</div>
-        ${heroCta}
-      </div>
+      ${heroCtaRow}
+      ${heroStats}
     </div>
   `;
 
@@ -804,11 +892,33 @@ async function renderLandingPage(env, url) {
         ${liveBadge}
         <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(30px,5.4vw,44px); margin:14px 0 10px; line-height:1.1;">Quality Used Cars, <em>Straight From Our</em> Brick Lot.</h1>
         <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:56ch; line-height:1.6; color:var(--ink-soft); margin:0;">Every car you see is parked on our lot at 1 &amp; 3 Harvey Road. No catalogue cars, no middlemen. Selling instead? <a href="/evaluate" style="color:var(--coral); font-weight:600;">Get a trade-in value &rarr;</a></p>
-        <div class="materialize" style="animation-delay:0.5s; margin-top:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-          <div class="finance-badge">70% Deposit</div>
-          ${heroCta}
-        </div>
+        ${heroCtaRow}
+        ${heroStats}
       </div>`;
+
+  // "Today on the Floor" panel - a real lot photo, opening hours status,
+  // and a live "from" price computed off actual stock, not a hardcoded figure.
+  const lowestPrice = stock.length ? Math.min(...stock.map(s => Number(s.retail_price))) : null;
+  const todayOnFloor = `
+    <div class="card reveal today-on-floor" style="margin-top:${heroMedia ? "24px" : "10px"};">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px;">
+        <div>
+          <div class="eyebrow" style="margin-bottom:4px;">Today On The Floor</div>
+          <h2 style="margin:0; font-size:22px;">Harvey Road Lot</h2>
+        </div>
+        <span class="open-badge"><span class="live-dot pulse-dot" aria-hidden="true"></span>Open &middot; Viewing now</span>
+      </div>
+      <div class="today-on-floor-media">
+        <img src="/photos/${encodeURIComponent(FLOOR_GALLERY_KEYS[0])}" alt="The AutoShow Bloemfontein lot at 1 & 3 Harvey Road" loading="lazy">
+        ${lowestPrice ? `<span class="from-price-badge">From<br>R${(lowestPrice / 1000).toFixed(0)}k</span>` : ""}
+      </div>
+      <div class="today-on-floor-tiles">
+        <div><span class="tile-label">Location</span>1 &amp; 3 Harvey Rd, Bloem</div>
+        <div><span class="tile-label">Contact</span>${WHATSAPP_DISPLAY}</div>
+      </div>
+      <p style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft); margin:12px 0 0;">No online-only listings. If it's on this site, it's on our bricks. Come feel the doors close.</p>
+    </div>
+  `;
 
   const filterBar = `
     <div class="card materialize hero-search" style="animation-delay:0.55s; position:relative; z-index:5; margin-top:${heroMedia ? "-64px" : "20px"}; margin-bottom:32px; padding:24px 26px;">
@@ -845,6 +955,7 @@ async function renderLandingPage(env, url) {
 
   const body = `
     ${hero}
+    ${todayOnFloor}
     <div id="recently-viewed-section" style="display:none; margin-top:20px;">
       <h2 style="font-size:20px;">Recently Viewed</h2>
       <div id="recently-viewed-list"></div>
@@ -861,7 +972,7 @@ async function renderLandingPage(env, url) {
     <div class="floor-section">
       ${floorSectionVideo}
       <div class="floor-section-inner">
-        <div class="reveal" style="margin-top:48px;">
+        <div class="reveal" id="floor" style="margin-top:48px;">
           <h2 style="font-size:24px; margin-bottom:6px;">From the Floor</h2>
           <p style="color:var(--ink-soft); font-size:14px; margin-top:0; max-width:56ch;">Real shots from what's on the lot right now &mdash; no stock photography.</p>
           <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:16px;">
@@ -873,10 +984,12 @@ async function renderLandingPage(env, url) {
           </div>
         </div>
 
-        <div class="card reveal finance-card" style="margin-top:34px;">
-          <div class="finance-badge">70% Deposit</div>
-          <div class="eyebrow" style="margin-top:14px;">Customer First &middot; Faith Before Finance</div>
-          <h2 style="margin:4px 0 6px; font-size:22px;">What would your 70% deposit look like?</h2>
+        <div class="card reveal finance-card" id="finance" style="margin-top:34px;">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px;">
+            <div class="finance-badge">70% Deposit Model &middot; Live Calculator</div>
+            <span class="fin-formula">Car Cost = Deposit &minus; Your Trade-In</span>
+          </div>
+          <h2 style="margin:14px 0 6px; font-size:22px;">What would your 70% deposit look like?</h2>
           <p style="color:var(--ink-soft); font-size:14px; max-width:56ch; margin-top:0;">
             Pick a vehicle price and your trade-in value &mdash; we'll work out your deposit
             after trade-in, live.
@@ -902,24 +1015,119 @@ async function renderLandingPage(env, url) {
             </div>
           </div>
 
-          <div id="fin-result" class="fin-result">70% deposit after trade: R 126,000</div>
+          <div class="fin-breakdown">
+            <div class="fin-tile fin-tile-dark">
+              <span class="fin-tile-label">70% Deposit</span>
+              <span class="fin-tile-amount" id="fin-deposit-amount">R 126,000</span>
+              <span class="fin-tile-note" id="fin-deposit-note">70% of R180,000</span>
+            </div>
+            <div class="fin-tile">
+              <span class="fin-tile-label">Minus Trade-In</span>
+              <span class="fin-tile-amount" id="fin-tradein-amount">&minus; R 0</span>
+              <span class="fin-tile-note">Your car value offset</span>
+            </div>
+            <div class="fin-tile fin-tile-coral">
+              <span class="fin-tile-label">You Pay Today</span>
+              <span class="fin-tile-amount" id="fin-result">R 126,000</span>
+              <span class="fin-tile-note">Deposit &minus; Trade-In = Car Cost</span>
+            </div>
+          </div>
 
-          <button type="button" id="rejected-btn" class="btn btn-outline" style="margin-top:14px;">Previously Rejected? Talk To Us</button>
+          <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:16px;">
+            <a id="fin-whatsapp" href="https://wa.me/${WHATSAPP_NUMBER}" class="btn btn-whatsapp">WhatsApp This Calculation</a>
+            <span class="hero-caption">Calculation is indicative. Final subject to in-person evaluation at 1 &amp; 3 Harvey Road.</span>
+          </div>
+        </div>
+
+        <div class="card reveal in-house-finance" style="margin-top:24px;">
+          <div class="finance-badge" style="background:rgba(255,255,255,0.15); color:#fff;">Previously Rejected? Talk To Us</div>
+          <h2 style="margin:14px 0 10px; font-size:24px; color:#fff;">In-house financing, not a call centre.</h2>
+          <p style="color:rgba(246,246,248,0.75); max-width:60ch;">
+            Banks said no? We've heard it before. At AutoShow Bloemfontein we look at the person, not
+            just the payslip. If you're committed to a 70% deposit structure and have a trade-in,
+            we'll sit with you, face-to-face on the lot, and find a workable path.
+          </p>
+          <ul class="in-house-list">
+            <li>Same-day assessment on Harvey Road</li>
+            <li>Trade-in valued on the spot, transparent</li>
+            <li>No jargon, clear repayment breakdown</li>
+          </ul>
+          <a id="in-house-whatsapp" href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi Auto Show, I was previously declined elsewhere. I have R0 trade-in and can do 70% deposit. Can we talk in-house?")}" class="btn btn-primary">Talk To Finance</a>
+        </div>
+
+        <div class="reveal how-it-works" style="margin-top:34px;">
+          <div class="eyebrow">How It Works</div>
+          <ol class="how-it-works-list">
+            <li><span class="step-num">1</span><div><strong>Pick real stock on the bricks</strong><p>All ${stock.length} car${stock.length === 1 ? "" : "s"} below ${stock.length === 1 ? "is" : "are"} on our lot today.</p></div></li>
+            <li><span class="step-num">2</span><div><strong>70% deposit minus trade-in</strong><p>We deduct your trade-in value directly. What remains is what you pay to drive off.</p></div></li>
+            <li><span class="step-num">3</span><div><strong>Drive from Harvey Road</strong><p>Paperwork done on site, car leaves the same lot you saw it on.</p></div></li>
+          </ol>
         </div>
       </div>
     </div>
 
-    <div id="rejected-modal" class="modal-backdrop" hidden>
-      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="rejected-modal-title">
-        <button type="button" id="rejected-modal-close" class="modal-close" aria-label="Close">&times;</button>
-        <div class="eyebrow">Customer First</div>
-        <h2 id="rejected-modal-title" style="margin-top:6px;">Been turned down before? Let's talk anyway.</h2>
-        <p style="color:var(--ink-soft);">
-          A previous rejection somewhere else doesn't decide your outcome with us. We look at real
-          circumstances, not just a score &mdash; message us on WhatsApp and we'll walk through your
-          options honestly, no obligation.
-        </p>
-        <a id="rejected-whatsapp" href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi Auto Show, I was previously declined elsewhere. I have R0 trade-in and can do 70% deposit. Can we talk in-house?")}" class="btn btn-whatsapp" style="width:100%; justify-content:center;">Talk To Us on WhatsApp</a>
+    <div class="reveal brick-story" style="margin-top:48px;">
+      <div class="eyebrow">From the Floor</div>
+      <h2 style="font-size:26px; margin:6px 0 10px;">We're not a website. We're a brick lot.</h2>
+      <p style="color:var(--ink-soft); max-width:64ch; margin-top:0;">
+        No rented desks, no virtual showroom. We bought the corner at 1 &amp; 3 Harvey Road because
+        Bloemfontein deserves a place where you can kick tyres, hear the engine cold-start, and
+        shake the hand of the person who serviced it.
+      </p>
+
+      ${teamPhotoExists ? `
+      <figure class="brick-story-photo">
+        <img src="/photos/${encodeURIComponent(TEAM_PHOTO_KEY)}" alt="The AutoShow Bloemfontein team" loading="lazy">
+        <figcaption>
+          <strong>The people behind the lot</strong>
+          <span>Every car gets a pre-delivery check by the same small team you'll meet on arrival.</span>
+        </figcaption>
+      </figure>
+      ` : ""}
+
+      <div class="brick-story-cards">
+        <div class="card">
+          <strong>Real stock, not internet stock</strong>
+          <p>We photograph on our own forecourt. The video backgrounds on this page are actually us &mdash; real cars, real dust, real Bloem sun.</p>
+        </div>
+        <div class="card">
+          <strong>Transparent pricing, no switch</strong>
+          <p>The price you see includes what's done. No &ldquo;add R15k for roadworthy after.&rdquo; Roadworthy, service history check, and valet &mdash; included before you collect.</p>
+        </div>
+      </div>
+
+      <div class="card brick-story-visit">
+        <img src="/photos/${encodeURIComponent(FLOOR_GALLERY_KEYS[0])}" alt="The AutoShow Bloemfontein lot" loading="lazy">
+        <div class="brick-story-visit-info">
+          <div class="eyebrow" style="margin-bottom:4px;">Visit Us</div>
+          <h3 style="margin:0 0 8px; font-size:19px;">1 &amp; 3 Harvey Road, Bloemfontein</h3>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+            <span class="visit-chip">Mon&ndash;Fri 8am&ndash;5:30pm</span>
+            <span class="visit-chip">Sat 8am&ndash;1pm</span>
+            <span class="visit-chip">${WHATSAPP_DISPLAY}</span>
+          </div>
+          <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi, I'd like directions to 1 & 3 Harvey Road.")}" class="btn btn-primary">Get Directions on WhatsApp</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal" id="values" style="margin-top:48px;">
+      <div class="eyebrow">Our Values</div>
+      <h2 style="font-size:26px; margin:6px 0 14px;">Customer First, Faith Before Finance</h2>
+      <p class="values-quote">Faith before finance &mdash; we put people first. That means clear pricing, honest advice, and service that adds value long after the sale. Customer first, always.</p>
+      <div class="values-cards">
+        <div class="card">
+          <strong>Customer First, Always</strong>
+          <p>We listen before we sell. Your budget, your family needs, your commute across Bloemfontein &mdash; that's the brief, not our target.</p>
+        </div>
+        <div class="card">
+          <strong>Transparent Trade-In</strong>
+          <p>Your trade-in is evaluated in front of you, on the lift if you want. No back-office lowball. Value applied directly to your 70% deposit.</p>
+        </div>
+        <div class="card">
+          <strong>After-Sale Service</strong>
+          <p>You bought on Harvey Road, you service with people who know the car's history. We keep records, we pick up the phone, we remember your name.</p>
+        </div>
       </div>
     </div>
 
@@ -1020,18 +1228,22 @@ async function renderLandingPage(env, url) {
 
     <script>
       // Finance teaser: pick a vehicle price + trade-in value, we compute
-      // the 70% deposit after trade-in live, plus a cargo-bay bar showing
-      // how much of that deposit the trade-in covers, and the "previously
-      // rejected" modal.
+      // the 70% deposit after trade-in live across three result tiles, a
+      // cargo-bay bar showing how much of that deposit the trade-in
+      // covers, and dynamic WhatsApp links carrying the real numbers.
       (function () {
         const priceRange = document.getElementById('fin-price');
         const priceNum = document.getElementById('fin-price-num');
         const tradeinRange = document.getElementById('fin-tradein');
         const tradeinNum = document.getElementById('fin-tradein-num');
+        const depositAmountEl = document.getElementById('fin-deposit-amount');
+        const depositNoteEl = document.getElementById('fin-deposit-note');
+        const tradeinAmountEl = document.getElementById('fin-tradein-amount');
         const resultEl = document.getElementById('fin-result');
         const fillEl = document.getElementById('cargo-fill');
         const labelEl = document.getElementById('cargo-label');
-        const rejectedWa = document.getElementById('rejected-whatsapp');
+        const finWa = document.getElementById('fin-whatsapp');
+        const inHouseWa = document.getElementById('in-house-whatsapp');
         if (!priceRange || !tradeinRange) return;
 
         function syncPair(rangeEl, numEl, value) {
@@ -1046,12 +1258,20 @@ async function renderLandingPage(env, url) {
           const remaining = Math.max(deposit - tradein, 0);
           const covered = deposit > 0 ? Math.min(tradein / deposit, 1) : 0;
 
-          resultEl.textContent = '70% deposit after trade: R ' + Math.round(remaining).toLocaleString();
+          if (depositAmountEl) depositAmountEl.textContent = 'R ' + Math.round(deposit).toLocaleString();
+          if (depositNoteEl) depositNoteEl.textContent = '70% of R' + Math.round(price).toLocaleString();
+          if (tradeinAmountEl) tradeinAmountEl.textContent = '− R ' + Math.round(tradein).toLocaleString();
+          if (resultEl) resultEl.textContent = 'R ' + Math.round(remaining).toLocaleString();
           if (fillEl) fillEl.style.width = (covered * 100).toFixed(0) + '%';
           if (labelEl) labelEl.textContent = (covered * 100).toFixed(0) + '% covered';
 
-          if (rejectedWa) {
-            rejectedWa.href = 'https://wa.me/${WHATSAPP_NUMBER}?text=' + encodeURIComponent(
+          if (finWa) {
+            finWa.href = 'https://wa.me/${WHATSAPP_NUMBER}?text=' + encodeURIComponent(
+              'Hi, my trade-in is R' + Math.round(tradein) + ' and I’m looking at R' + Math.round(price) + ' vehicle. My 70% deposit after trade is R' + Math.round(remaining) + '. Can we talk finance?'
+            );
+          }
+          if (inHouseWa) {
+            inHouseWa.href = 'https://wa.me/${WHATSAPP_NUMBER}?text=' + encodeURIComponent(
               'Hi Auto Show, I was previously declined elsewhere. I have R' + Math.round(tradein) + ' trade-in and can do 70% deposit. Can we talk in-house?'
             );
           }
@@ -1072,16 +1292,6 @@ async function renderLandingPage(env, url) {
         });
 
         calcFinance();
-
-        const modal = document.getElementById('rejected-modal');
-        const openBtn = document.getElementById('rejected-btn');
-        const closeBtn = document.getElementById('rejected-modal-close');
-        if (modal && openBtn && closeBtn) {
-          openBtn.addEventListener('click', () => { modal.hidden = false; });
-          closeBtn.addEventListener('click', () => { modal.hidden = true; });
-          modal.addEventListener('click', (e) => { if (e.target === modal) modal.hidden = true; });
-          document.addEventListener('keydown', (e) => { if (e.key === 'Escape') modal.hidden = true; });
-        }
       })();
     </script>
   `;
@@ -1193,6 +1403,33 @@ async function renderLandingPage(env, url) {
   }
   .floor-section-inner { position: relative; z-index: 1; }
 
+  /* "Today on the Floor" panel just under the hero. */
+  .open-badge {
+    display: inline-flex; align-items: center; gap: 7px; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    color: #166534; background: #dcfce7; padding: 5px 12px; border-radius: 20px; white-space: nowrap;
+  }
+  .open-badge .live-dot { background: #22c55e; }
+  .today-on-floor-media { position: relative; margin-top: 16px; border-radius: 14px; overflow: hidden; }
+  .today-on-floor-media img { display: block; width: 100%; aspect-ratio: 16/7; object-fit: cover; }
+  .from-price-badge {
+    position: absolute; right: 16px; bottom: -18px; width: 66px; height: 66px; border-radius: 50%;
+    background: var(--coral); color: #fff; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    font-weight: 700; text-transform: uppercase; line-height: 1.3; box-shadow: 0 6px 18px rgba(227,30,43,0.4);
+  }
+  .from-price-badge br + * { font-size: 13px; }
+  .today-on-floor-tiles {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 30px;
+  }
+  .today-on-floor-tiles > div {
+    background: rgba(18,18,18,0.04); border-radius: 10px; padding: 10px 12px; font-size: 13px; font-weight: 600;
+  }
+  .tile-label {
+    display: block; font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--ink-soft); font-weight: 700; margin-bottom: 3px;
+  }
+
   /* Finance teaser: deposit badge, price/trade-in sliders, cargo-bay fill
      bar, "previously rejected" modal. */
   .finance-card { position: relative; overflow: hidden; }
@@ -1222,6 +1459,76 @@ async function renderLandingPage(env, url) {
   .fin-quickpick:hover, .fin-quickpick.active {
     border-color: var(--coral); background: var(--coral); color: #fff;
   }
+  .fin-formula {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); white-space: nowrap;
+  }
+  .fin-breakdown { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 18px; }
+  @media (min-width: 640px) { .fin-breakdown { grid-template-columns: repeat(3, 1fr); } }
+  .fin-tile { border-radius: 12px; padding: 14px 16px; background: rgba(18,18,18,0.04); border: 1px solid var(--line); }
+  .fin-tile-dark { background: var(--ink); border-color: var(--ink); }
+  .fin-tile-dark .fin-tile-label, .fin-tile-dark .fin-tile-note { color: rgba(246,246,248,0.6); }
+  .fin-tile-dark .fin-tile-amount { color: var(--paper); }
+  .fin-tile-coral { background: var(--coral); border-color: var(--coral); }
+  .fin-tile-coral .fin-tile-label, .fin-tile-coral .fin-tile-note { color: rgba(255,255,255,0.75); }
+  .fin-tile-coral .fin-tile-amount { color: #fff; }
+  .fin-tile-label {
+    display: block; font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--ink-soft); font-weight: 700; margin-bottom: 6px;
+  }
+  .fin-tile-amount { display: block; font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; color: var(--ink); }
+  .fin-tile-note { display: block; font-size: 11px; color: var(--ink-soft); margin-top: 4px; }
+
+  /* In-house financing promo - dark card, direct WhatsApp CTA. */
+  .in-house-finance { background: var(--ink); color: var(--paper); }
+  .in-house-list { list-style: none; margin: 16px 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .in-house-list li {
+    position: relative; padding-left: 18px; color: rgba(246,246,248,0.85); font-size: 14px;
+  }
+  .in-house-list li::before {
+    content: ''; position: absolute; left: 0; top: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--coral);
+  }
+
+  /* How It Works - three numbered steps. */
+  .how-it-works-list { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+  .how-it-works-list li { display: flex; gap: 14px; align-items: flex-start; }
+  .step-num {
+    flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: var(--paper);
+    display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 700;
+  }
+  .how-it-works-list strong { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 600; }
+  .how-it-works-list p { margin: 4px 0 0; color: var(--ink-soft); font-size: 14px; }
+
+  /* Brick-lot story: team photo, trust cards, visit-us panel. */
+  .brick-story-photo { margin: 20px 0 0; }
+  .brick-story-photo img { width: 100%; border-radius: 14px; display: block; aspect-ratio: 16/9; object-fit: cover; }
+  .brick-story-photo figcaption { margin-top: 10px; }
+  .brick-story-photo figcaption strong { display: block; font-family: 'Fraunces', serif; font-size: 15px; }
+  .brick-story-photo figcaption span { display: block; color: var(--ink-soft); font-size: 13px; margin-top: 2px; }
+  .brick-story-cards { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 20px; }
+  @media (min-width: 640px) { .brick-story-cards { grid-template-columns: 1fr 1fr; } }
+  .brick-story-cards strong { font-family: 'Fraunces', serif; font-size: 16px; }
+  .brick-story-cards p { color: var(--ink-soft); font-size: 14px; margin: 6px 0 0; }
+  .brick-story-visit {
+    margin-top: 20px; padding: 0; overflow: hidden; display: grid; grid-template-columns: 1fr;
+  }
+  @media (min-width: 640px) { .brick-story-visit { grid-template-columns: 1fr 1fr; } }
+  .brick-story-visit img { width: 100%; height: 100%; min-height: 180px; object-fit: cover; display: block; }
+  .brick-story-visit-info { padding: 22px; }
+  .visit-chip {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; background: rgba(18,18,18,0.05);
+    padding: 5px 10px; border-radius: 20px; color: var(--ink-soft);
+  }
+
+  /* Our Values section. */
+  .values-quote {
+    border-left: 3px solid var(--coral); padding-left: 16px; color: var(--ink-soft); font-size: 15px;
+    max-width: 64ch; font-style: italic;
+  }
+  .values-cards { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 18px; }
+  @media (min-width: 640px) { .values-cards { grid-template-columns: repeat(3, 1fr); } }
+  .values-cards strong { font-family: 'Fraunces', serif; font-size: 16px; }
+  .values-cards p { color: var(--ink-soft); font-size: 14px; margin: 6px 0 0; }
   .finance-badge {
     display: inline-flex; align-items: center; font-family: 'JetBrains Mono', monospace;
     font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
