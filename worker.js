@@ -41,6 +41,12 @@ const HERO_VIDEO_KEYS = [
 // 404 regression from hardcoding a key that isn't there yet.
 const PRIMARY_HERO_VIDEO_KEY = "video/autoshow_hero_bg_480_noaudio.mp4";
 
+// Second background video (pitch-spec key), used as a quiet 0.14-opacity
+// wash behind the floor gallery / finance section rather than in the hero.
+// Same existence-check pattern as PRIMARY_HERO_VIDEO_KEY - only used if
+// actually present in R2.
+const FLOOR_SECTION_VIDEO_KEY = "video/autoshow_hero_main_noaudio.mp4";
+
 // Real floor-stock photos, uploaded directly to R2 under floor/ - these are
 // the actual cars on the actual lot right now. Used for the "From the
 // Floor" gallery so it always shows real photos, independent of which
@@ -312,7 +318,8 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
      full-bleed rather than boxed, with its content constrained to the
      usual reading width inside .header-inner. */
   header {
-    position: sticky; top: 0; z-index: 20; background: #0A0A0A;
+    position: sticky; top: 0; z-index: 20; background: rgba(10,10,10,0.8);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid transparent; transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
   header.scrolled { border-bottom-color: rgba(255,255,255,0.08); box-shadow: 0 4px 20px rgba(0,0,0,0.35); }
@@ -405,15 +412,22 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   .logo-link:hover { transform: translateY(-1px); opacity: 0.9; }
   .logo-image { display: block; height: 40px; width: auto; }
 
-  /* Ambient background audio toggle - small, unobtrusive, header-mounted. */
+  /* Ambient background audio toggle - header-mounted pill, icon + label. */
   .ambient-toggle {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25);
+    display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+    height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.25);
     background: rgba(255,255,255,0.9); color: var(--ink-soft); cursor: pointer;
     margin-left: 14px; transition: border-color 0.15s ease, color 0.15s ease;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em;
   }
   .ambient-toggle:hover { border-color: var(--coral); color: var(--coral); }
-  .ambient-toggle svg { width: 16px; height: 16px; }
+  .ambient-toggle svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .ambient-toggle .ambient-hint {
+    font-weight: 500; text-transform: none; letter-spacing: normal; color: var(--ink-soft);
+    opacity: 0.7; display: none;
+  }
+  @media (min-width: 768px) { .ambient-toggle .ambient-hint { display: inline; } }
 
   /* Generated brand mark - an ink wordmark with a coral gleam that sweeps
      across it, re-angled per page load. Coral stays the only accent, same
@@ -480,7 +494,16 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   .hero-text { position: relative; z-index: 1; }
   .hero-content .eyebrow { color: var(--gold); }
   .hero-content h1 { color: var(--paper); }
+  .hero-content h1 em, h1 em { font-style: italic; font-weight: 500; opacity: 0.88; }
   .hero-content p { color: rgba(246,246,248,0.88); }
+
+  /* "Live on Harvey Road" status badge above the headline. */
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .hero-content .live-badge { color: rgba(246,246,248,0.85); }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.7); }
   .hero-content .stat-strip span { color: rgba(246,246,248,0.78); }
   @media (prefers-reduced-motion: reduce) {
     .hero-slide { animation: none; transition: opacity 0.4s ease; }
@@ -570,22 +593,27 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     (function () {
       const audio = document.getElementById('ambient-audio');
       const toggle = document.getElementById('ambient-toggle');
+      const label = document.getElementById('ambient-label');
       if (!audio || !toggle) return;
 
       audio.volume = 0.22;
 
       let userMuted = false;
+      let started = false;
       try { userMuted = localStorage.getItem('autoshow_ambient_muted') === '1'; } catch (e) {}
 
       function setIcon(muted) {
         toggle.querySelector('.icon-sound-on').style.display = muted ? 'none' : '';
         toggle.querySelector('.icon-sound-off').style.display = muted ? '' : 'none';
         toggle.setAttribute('aria-pressed', String(!muted));
+        if (label) label.textContent = !started ? 'Enable sound' : muted ? 'Unmute' : 'Mute';
       }
       setIcon(userMuted);
 
       function startOnce() {
+        started = true;
         if (!userMuted) audio.play().catch(() => {});
+        setIcon(userMuted);
         ['pointerdown', 'touchstart', 'click'].forEach((evt) => document.removeEventListener(evt, startOnce));
       }
       if (!prefersReducedMotion) {
@@ -593,6 +621,7 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
       }
 
       toggle.addEventListener('click', () => {
+        started = true;
         userMuted = !userMuted;
         try { localStorage.setItem('autoshow_ambient_muted', userMuted ? '1' : '0'); } catch (e) {}
         setIcon(userMuted);
@@ -612,9 +641,11 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
       <a href="/#stock">Stock</a>
       <a href="/evaluate">Sell / Trade-In</a>
       <a href="https://wa.me/${WHATSAPP_NUMBER}">WhatsApp</a>
-      <button type="button" id="ambient-toggle" class="ambient-toggle" aria-label="Toggle background sound" aria-pressed="false" title="Toggle background sound">
+      <button type="button" id="ambient-toggle" class="ambient-toggle" aria-label="Toggle background sound" aria-pressed="false" title="Tap to mute / unmute">
         <svg class="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18 6a9 9 0 010 12"/></svg>
         <svg class="icon-sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:none;"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M23 9l-6 6M17 9l6 6"/></svg>
+        <span id="ambient-label">Enable sound</span>
+        <span class="ambient-hint">&bull; BG MP3 &bull; 0.22 vol &bull; Cursor-activated</span>
       </button>
     </nav>
   </div>
@@ -622,8 +653,9 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
 ${AMBIENT_AUDIO_KEY ? `<audio id="ambient-audio" src="/photos/${encodeURIComponent(AMBIENT_AUDIO_KEY)}" loop preload="none"></audio>` : ""}
 <main id="main-content">${bodyContent}</main>
 <footer style="max-width:1100px; margin:40px auto 0; padding:20px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft);">
-  AutoShow Bloemfontein &middot; 190 Oliver Tambo Road, Oranjesig &middot;
+  AutoShow Bloemfontein &middot; 1 &amp; 3 Harvey Road, Bloemfontein &middot;
   <a href="https://wa.me/${WHATSAPP_NUMBER}" style="color:var(--coral);">WhatsApp ${WHATSAPP_NUMBER}</a>
+  &middot; <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi, I'd like directions to 1 & 3 Harvey Road.")}" style="color:var(--coral);">Get Directions</a>
   &middot; <a href="https://www.facebook.com/autoshowbloemfontein" style="color:var(--coral);">Read our reviews on Facebook</a>
 </footer>
 ${debugMode ? `<script src="https://cdn.jsdelivr.net/npm/eruda@3"></script><script>eruda.init();</script>` : ""}
@@ -650,6 +682,13 @@ async function renderLandingPage(env, url) {
   // otherwise keep using the two hero clips already confirmed live.
   const primaryVideoExists = await env.PHOTOS.head(PRIMARY_HERO_VIDEO_KEY).then((h) => !!h).catch(() => false);
   const heroVideoKeys = primaryVideoExists ? [PRIMARY_HERO_VIDEO_KEY] : HERO_VIDEO_KEYS;
+
+  // Same existence-check pattern for the quiet background video behind the
+  // floor gallery / finance section further down the page.
+  const floorVideoExists = await env.PHOTOS.head(FLOOR_SECTION_VIDEO_KEY).then((h) => !!h).catch(() => false);
+  const floorSectionVideo = floorVideoExists
+    ? `<video class="floor-section-video" autoplay muted loop playsinline preload="auto"><source src="/photos/${encodeURIComponent(FLOOR_SECTION_VIDEO_KEY)}" type="video/mp4"></video><div class="floor-section-overlay"></div>`
+    : "";
 
   const carIconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 17h14M5 17a2 2 0 100 4 2 2 0 000-4zm14 0a2 2 0 100 4 2 2 0 000-4zM5 17V9l2-5h10l2 5v8"/></svg>`;
 
@@ -692,9 +731,10 @@ async function renderLandingPage(env, url) {
         <span class="price-currency">R</span><span class="price-amount">${Number(s.retail_price).toLocaleString()}</span>
         <span class="price-bar" aria-hidden="true"></span>
       </div>
+      <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft); margin:-4px 0 12px;">70% deposit: R ${Math.round(Number(s.retail_price) * 0.7).toLocaleString()}</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <a href="/test-drive?stock_id=${s.stock_id}" class="btn btn-primary">Book Test Drive</a>
-        <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi, I'm interested in the ${s.year} ${s.make} ${s.model} - is it still available?`)}" class="btn btn-whatsapp">WhatsApp Us</a>
+        <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi Auto Show, I'm interested in the ${s.year} ${s.make} ${s.model} - R${Math.round(Number(s.retail_price))} on your floor. Is it still available?`)}" class="btn btn-whatsapp">WhatsApp Us</a>
       </div>
     </div>
   `).join("");
@@ -717,14 +757,17 @@ async function renderLandingPage(env, url) {
          </div>`
       : "";
 
+  const liveBadge = `<div class="live-badge materialize" style="animation-delay:0.05s;"><span class="live-dot pulse-dot" aria-hidden="true"></span>Live on Harvey Road &middot; Brick &amp; Mortar Stock Only</div>`;
+  const heroCta = `<a href="#stock" class="btn btn-primary">Browse ${stock.length} Live Vehicle${stock.length === 1 ? "" : "s"} &rarr;</a>`;
+
   const heroInner = `
     <div class="hero-text">
-      <div class="eyebrow materialize" style="animation-delay:0.1s;">Bloemfontein &middot; Quality Used Vehicles</div>
-      <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(32px,6vw,50px); margin:0 0 14px; line-height:1.08;">Quality Used Cars<br>on Brick Paving.</h1>
-      <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:50ch; line-height:1.6;">Real stock, updated daily. Search below and book a time that works for you.</p>
+      ${liveBadge}
+      <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(32px,6vw,50px); margin:14px 0 14px; line-height:1.08;">Quality Used Cars,<br><em>Straight From Our</em><br>Brick Lot.</h1>
+      <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:52ch; line-height:1.6;">Every car you see is parked on our lot at 1 &amp; 3 Harvey Road. Physically inspected, serviced, and ready to test-drive today. No catalogue cars. No middlemen. Just honest, on-the-floor stock priced to move in Bloemfontein.</p>
       <div class="materialize" style="animation-delay:0.5s; margin-top:16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
         <div class="finance-badge">70% Deposit</div>
-        <a href="#stock" class="btn btn-primary">Find Your Car</a>
+        ${heroCta}
       </div>
     </div>
   `;
@@ -755,12 +798,12 @@ async function renderLandingPage(env, url) {
       </div>`
     : `<div class="hero-wrap" style="padding:44px 0 4px; position:relative;">
         <div class="diagonal-accent materialize" style="animation-delay:0s;" aria-hidden="true"></div>
-        <div class="eyebrow materialize" style="animation-delay:0.1s;">Bloemfontein &middot; Quality Used Vehicles</div>
-        <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(30px,5.4vw,44px); margin:14px 0 10px; line-height:1.1;">Quality Used Cars on Brick Paving.</h1>
-        <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:56ch; line-height:1.6; color:var(--ink-soft); margin:0;">Real stock, updated daily. Selling instead? <a href="/evaluate" style="color:var(--coral); font-weight:600;">Get a trade-in value &rarr;</a></p>
+        ${liveBadge}
+        <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(30px,5.4vw,44px); margin:14px 0 10px; line-height:1.1;">Quality Used Cars, <em>Straight From Our</em> Brick Lot.</h1>
+        <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:56ch; line-height:1.6; color:var(--ink-soft); margin:0;">Every car you see is parked on our lot at 1 &amp; 3 Harvey Road. No catalogue cars, no middlemen. Selling instead? <a href="/evaluate" style="color:var(--coral); font-weight:600;">Get a trade-in value &rarr;</a></p>
         <div class="materialize" style="animation-delay:0.5s; margin-top:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
           <div class="finance-badge">70% Deposit</div>
-          <a href="#stock" class="btn btn-primary">Find Your Car</a>
+          ${heroCta}
         </div>
       </div>`;
 
@@ -812,43 +855,55 @@ async function renderLandingPage(env, url) {
     </div>
     <div id="stock-empty" class="card" style="display:none; text-align:center;">No vehicles match those filters right now &mdash; try widening your search.</div>
 
-    <div class="reveal" style="margin-top:48px;">
-      <h2 style="font-size:24px; margin-bottom:6px;">From the Floor</h2>
-      <p style="color:var(--ink-soft); font-size:14px; margin-top:0; max-width:56ch;">Real shots from what's on the lot right now &mdash; no stock photography.</p>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:16px;">
-        ${FLOOR_GALLERY_KEYS.map(key => `
-          <div class="card tilt-card" style="padding:0; overflow:hidden;">
-            <img src="/photos/${encodeURIComponent(key)}" alt="A vehicle on the AutoShow floor" loading="lazy" style="width:100%; aspect-ratio:1; object-fit:cover; display:block;">
+    <div class="floor-section">
+      ${floorSectionVideo}
+      <div class="floor-section-inner">
+        <div class="reveal" style="margin-top:48px;">
+          <h2 style="font-size:24px; margin-bottom:6px;">From the Floor</h2>
+          <p style="color:var(--ink-soft); font-size:14px; margin-top:0; max-width:56ch;">Real shots from what's on the lot right now &mdash; no stock photography.</p>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:16px;">
+            ${FLOOR_GALLERY_KEYS.map(key => `
+              <div class="card tilt-card" style="padding:0; overflow:hidden;">
+                <img src="/photos/${encodeURIComponent(key)}" alt="A vehicle on the AutoShow floor" loading="lazy" style="width:100%; aspect-ratio:1; object-fit:cover; display:block;">
+              </div>
+            `).join("")}
           </div>
-        `).join("")}
-      </div>
-    </div>
-
-    <div class="card reveal finance-card" style="margin-top:34px;">
-      <div class="finance-badge">70% Deposit</div>
-      <div class="eyebrow" style="margin-top:14px;">Customer First &middot; Faith Before Finance</div>
-      <h2 style="margin:4px 0 6px; font-size:22px;">See what you'd still need in cash</h2>
-      <p style="color:var(--ink-soft); font-size:14px; max-width:56ch; margin-top:0;">
-        AutoShow works with a 70% deposit as standard. Your trade-in can cover part of that
-        deposit &mdash; put in your numbers below and watch it fill in real time.
-      </p>
-
-      <div class="finance-grid">
-        <div>
-          <label for="fin-deposit">Required Deposit (R)</label>
-          <input type="number" id="fin-deposit" min="0" value="70000">
-          <label for="fin-tradein">Your Trade-In Value (R)</label>
-          <input type="number" id="fin-tradein" min="0" value="0">
         </div>
-        <div class="cargo-bay" id="cargo-bay">
-          <div class="cargo-fill" id="cargo-fill"></div>
-          <span class="cargo-label" id="cargo-label">0% covered</span>
+
+        <div class="card reveal finance-card" style="margin-top:34px;">
+          <div class="finance-badge">70% Deposit</div>
+          <div class="eyebrow" style="margin-top:14px;">Customer First &middot; Faith Before Finance</div>
+          <h2 style="margin:4px 0 6px; font-size:22px;">What would your 70% deposit look like?</h2>
+          <p style="color:var(--ink-soft); font-size:14px; max-width:56ch; margin-top:0;">
+            Pick a vehicle price and your trade-in value &mdash; we'll work out your deposit
+            after trade-in, live.
+          </p>
+
+          <div class="finance-grid">
+            <div>
+              <label for="fin-price">Vehicle Price (R)</label>
+              <input type="range" id="fin-price" min="80000" max="350000" step="1000" value="180000">
+              <input type="number" id="fin-price-num" min="80000" max="350000" step="1000" value="180000">
+              <div class="fin-quickpicks">
+                <button type="button" class="fin-quickpick" data-price="139900">R 139,900</button>
+                <button type="button" class="fin-quickpick" data-price="179900">R 179,900</button>
+                <button type="button" class="fin-quickpick" data-price="219900">R 219,900</button>
+              </div>
+              <label for="fin-tradein" style="margin-top:14px;">Your Trade-In Value (R)</label>
+              <input type="range" id="fin-tradein" min="0" max="150000" step="1000" value="0">
+              <input type="number" id="fin-tradein-num" min="0" max="150000" step="1000" value="0">
+            </div>
+            <div class="cargo-bay" id="cargo-bay">
+              <div class="cargo-fill" id="cargo-fill"></div>
+              <span class="cargo-label" id="cargo-label">0% covered</span>
+            </div>
+          </div>
+
+          <div id="fin-result" class="fin-result">70% deposit after trade: R 126,000</div>
+
+          <button type="button" id="rejected-btn" class="btn btn-outline" style="margin-top:14px;">Previously Rejected? Talk To Us</button>
         </div>
       </div>
-
-      <div id="fin-result" class="fin-result">Cash still needed: R 70,000</div>
-
-      <button type="button" id="rejected-btn" class="btn btn-outline" style="margin-top:14px;">Previously Rejected? Talk To Us</button>
     </div>
 
     <div id="rejected-modal" class="modal-backdrop" hidden>
@@ -861,7 +916,7 @@ async function renderLandingPage(env, url) {
           circumstances, not just a score &mdash; message us on WhatsApp and we'll walk through your
           options honestly, no obligation.
         </p>
-        <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi, I was previously turned down for finance elsewhere and I'd like to talk through my options with AutoShow.")}" class="btn btn-whatsapp" style="width:100%; justify-content:center;">Talk To Us on WhatsApp</a>
+        <a id="rejected-whatsapp" href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi Auto Show, I was previously declined elsewhere. I have R0 trade-in and can do 70% deposit. Can we talk in-house?")}" class="btn btn-whatsapp" style="width:100%; justify-content:center;">Talk To Us on WhatsApp</a>
       </div>
     </div>
 
@@ -961,28 +1016,58 @@ async function renderLandingPage(env, url) {
     </script>
 
     <script>
-      // Finance teaser: live "cash still needed" (deposit minus trade-in
-      // credit), a cargo-bay bar that fills to match how much of the
-      // deposit the trade-in covers, and the "previously rejected" modal.
+      // Finance teaser: pick a vehicle price + trade-in value, we compute
+      // the 70% deposit after trade-in live, plus a cargo-bay bar showing
+      // how much of that deposit the trade-in covers, and the "previously
+      // rejected" modal.
       (function () {
-        const depositEl = document.getElementById('fin-deposit');
-        const tradeinEl = document.getElementById('fin-tradein');
+        const priceRange = document.getElementById('fin-price');
+        const priceNum = document.getElementById('fin-price-num');
+        const tradeinRange = document.getElementById('fin-tradein');
+        const tradeinNum = document.getElementById('fin-tradein-num');
         const resultEl = document.getElementById('fin-result');
         const fillEl = document.getElementById('cargo-fill');
         const labelEl = document.getElementById('cargo-label');
-        if (!depositEl || !tradeinEl) return;
+        const rejectedWa = document.getElementById('rejected-whatsapp');
+        if (!priceRange || !tradeinRange) return;
+
+        function syncPair(rangeEl, numEl, value) {
+          rangeEl.value = value;
+          numEl.value = value;
+        }
 
         function calcFinance() {
-          const deposit = Math.max(parseFloat(depositEl.value) || 0, 0);
-          const tradein = Math.max(parseFloat(tradeinEl.value) || 0, 0);
+          const price = Math.max(parseFloat(priceRange.value) || 0, 0);
+          const tradein = Math.max(parseFloat(tradeinRange.value) || 0, 0);
+          const deposit = price * 0.7;
           const remaining = Math.max(deposit - tradein, 0);
           const covered = deposit > 0 ? Math.min(tradein / deposit, 1) : 0;
 
-          resultEl.textContent = 'Cash still needed: R ' + Math.round(remaining).toLocaleString();
+          resultEl.textContent = '70% deposit after trade: R ' + Math.round(remaining).toLocaleString();
           if (fillEl) fillEl.style.width = (covered * 100).toFixed(0) + '%';
           if (labelEl) labelEl.textContent = (covered * 100).toFixed(0) + '% covered';
+
+          if (rejectedWa) {
+            rejectedWa.href = 'https://wa.me/${WHATSAPP_NUMBER}?text=' + encodeURIComponent(
+              'Hi Auto Show, I was previously declined elsewhere. I have R' + Math.round(tradein) + ' trade-in and can do 70% deposit. Can we talk in-house?'
+            );
+          }
         }
-        [depositEl, tradeinEl].forEach((el) => el.addEventListener('input', calcFinance));
+
+        priceRange.addEventListener('input', () => { priceNum.value = priceRange.value; calcFinance(); });
+        priceNum.addEventListener('input', () => { syncPair(priceRange, priceNum, priceNum.value || 0); calcFinance(); });
+        tradeinRange.addEventListener('input', () => { tradeinNum.value = tradeinRange.value; calcFinance(); });
+        tradeinNum.addEventListener('input', () => { syncPair(tradeinRange, tradeinNum, tradeinNum.value || 0); calcFinance(); });
+
+        document.querySelectorAll('.fin-quickpick').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            syncPair(priceRange, priceNum, btn.dataset.price);
+            document.querySelectorAll('.fin-quickpick').forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+            calcFinance();
+          });
+        });
+
         calcFinance();
 
         const modal = document.getElementById('rejected-modal');
@@ -1092,9 +1177,48 @@ async function renderLandingPage(env, url) {
     .mono-count { margin-left: 0; }
   }
 
-  /* Finance teaser: deposit badge, cargo-bay fill bar, "previously
-     rejected" modal. */
+  /* Floor gallery + finance section share an optional quiet background
+     video (0.14 opacity) behind both, existence-checked at render time. */
+  .floor-section { position: relative; }
+  .floor-section-video {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    opacity: 0.14; z-index: 0;
+  }
+  .floor-section-overlay {
+    position: absolute; inset: 0; z-index: 0;
+    background: linear-gradient(180deg, var(--paper) 0%, rgba(246,246,248,0.85) 100%);
+  }
+  .floor-section-inner { position: relative; z-index: 1; }
+
+  /* Finance teaser: deposit badge, price/trade-in sliders, cargo-bay fill
+     bar, "previously rejected" modal. */
   .finance-card { position: relative; overflow: hidden; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 6px; padding: 0;
+    background: linear-gradient(90deg, var(--sage), var(--coral)); border: none;
+    border-radius: 3px; margin-bottom: 6px; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; border: 3px solid var(--coral); cursor: pointer;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid var(--coral); cursor: pointer;
+  }
+  input[type="number"]#fin-price-num, input[type="number"]#fin-tradein-num {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 18px; color: var(--ink);
+    padding: 8px 10px; margin-bottom: 10px;
+  }
+  .fin-quickpicks { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
+  .fin-quickpick {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    padding: 6px 12px; border-radius: 20px; border: 1px solid var(--line);
+    background: rgba(255,255,255,0.7); color: var(--ink-soft); cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  }
+  .fin-quickpick:hover, .fin-quickpick.active {
+    border-color: var(--coral); background: var(--coral); color: #fff;
+  }
   .finance-badge {
     display: inline-flex; align-items: center; font-family: 'JetBrains Mono', monospace;
     font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
