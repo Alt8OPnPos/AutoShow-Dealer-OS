@@ -327,11 +327,6 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     max-width: 1100px; margin: 0 auto; padding: 16px 20px; display: flex;
     justify-content: space-between; align-items: center;
   }
-  /* Logo keeps its real black+red mark, so it needs a light chip behind it
-     to stay legible on the dark header rather than a white logo variant. */
-  .logo-link {
-    background: var(--paper); padding: 6px 12px; border-radius: 10px;
-  }
   nav a {
     font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase;
     letter-spacing: 0.08em; color: rgba(246,246,248,0.75); text-decoration: none; margin-left: 20px;
@@ -407,10 +402,18 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   input:focus, select:focus, textarea:focus { border-color: var(--sage); }
   label { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); display: block; margin-bottom: 6px; }
 
-  /* Real AutoShow logo mark (transparent PNG from R2). */
-  .logo-link { display: inline-flex; align-items: center; transition: transform 0.15s ease, opacity 0.15s ease; }
+  /* Real AutoShow logo mark (transparent PNG from R2) - floats free on the
+     dark header, no chip/background behind it; a drop-shadow keeps it
+     legible against the header instead. */
+  .logo-link {
+    display: inline-flex; align-items: center; background: transparent; border: 0; padding: 0;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
   .logo-link:hover { transform: translateY(-1px); opacity: 0.9; }
-  .logo-image { display: block; height: 40px; width: auto; }
+  .logo-image {
+    display: block; height: 40px; width: auto; background: transparent; border: 0; box-shadow: none; padding: 0;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+  }
 
   /* Ambient background audio toggle - header-mounted pill, icon + label. */
   .ambient-toggle {
