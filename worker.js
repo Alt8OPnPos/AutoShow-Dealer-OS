@@ -330,7 +330,7 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   header.scrolled { border-bottom-color: rgba(255,255,255,0.08); box-shadow: 0 4px 20px rgba(0,0,0,0.35); }
   .header-inner {
     max-width: 1100px; margin: 0 auto; padding: 16px 20px; display: flex;
-    justify-content: space-between; align-items: center;
+    justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
   }
   nav a {
     font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase;
@@ -342,6 +342,17 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
     background: var(--coral); margin-right: 7px; vertical-align: middle; opacity: 0.75;
   }
   nav a:hover { color: var(--coral); border-bottom-color: var(--coral); }
+  /* The nav's plain text links wrap and overlap the logo below ~860px
+     (caught by actually rendering the page on a phone-width viewport) -
+     hide them there, same as the reference's own "hidden md:flex" nav. */
+  @media (max-width: 860px) {
+    nav a:not(.btn) { display: none; }
+    .nav-whatsapp-btn { padding: 9px 14px; font-size: 11px; }
+  }
+  @media (max-width: 480px) {
+    .ambient-toggle #ambient-label { display: none; }
+    .ambient-toggle { padding: 0 10px; }
+  }
   main { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
   h1 { font-family: 'Fraunces', serif; font-weight: 600; letter-spacing: -0.015em; }
   h2 { font-family: 'Fraunces', serif; font-weight: 600; letter-spacing: -0.01em; }
@@ -964,7 +975,7 @@ async function renderLandingPage(env, url) {
     <div class="reveal" style="margin-bottom:18px;">
       <h2 id="stock" style="font-size:26px; margin:0;">Current Stock</h2>
     </div>
-    <div id="stock-grid">
+    <div id="stock-grid" class="stock-grid">
       ${stockCards || '<div class="card">No stock currently listed.</div>'}
     </div>
     <div id="stock-empty" class="card" style="display:none; text-align:center;">No vehicles match those filters right now &mdash; try widening your search.</div>
@@ -1005,13 +1016,15 @@ async function renderLandingPage(env, url) {
                 <button type="button" class="fin-quickpick" data-price="179900">R 179,900</button>
                 <button type="button" class="fin-quickpick" data-price="219900">R 219,900</button>
               </div>
-              <label for="fin-tradein" style="margin-top:14px;">Your Trade-In Value (R)</label>
+            </div>
+            <div>
+              <label for="fin-tradein">Your Trade-In Value (R)</label>
               <input type="range" id="fin-tradein" min="0" max="150000" step="1000" value="0">
               <input type="number" id="fin-tradein-num" min="0" max="150000" step="1000" value="0">
-            </div>
-            <div class="cargo-bay" id="cargo-bay">
-              <div class="cargo-fill" id="cargo-fill"></div>
-              <span class="cargo-label" id="cargo-label">0% covered</span>
+              <div class="cargo-bay" id="cargo-bay">
+                <div class="cargo-fill" id="cargo-fill"></div>
+                <span class="cargo-label" id="cargo-label">0% of deposit covered</span>
+              </div>
             </div>
           </div>
 
@@ -1390,6 +1403,12 @@ async function renderLandingPage(env, url) {
     .mono-count { margin-left: 0; }
   }
 
+  /* Stock cards grid - was missing entirely (cards stacked full-width in
+     a single column even on wide desktop viewports) until caught by
+     actually rendering the page. */
+  .stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .stock-grid .card { margin-bottom: 0; }
+
   /* Floor gallery + finance section share an optional quiet background
      video (0.14 opacity) behind both, existence-checked at render time. */
   .floor-section { position: relative; }
@@ -1535,10 +1554,10 @@ async function renderLandingPage(env, url) {
     color: #fff; background: linear-gradient(90deg, var(--coral), var(--sage));
     padding: 6px 14px; border-radius: 20px;
   }
-  .finance-grid { display: grid; grid-template-columns: 1fr; gap: 18px; margin-top: 16px; }
-  @media (min-width: 640px) { .finance-grid { grid-template-columns: 1.1fr 0.9fr; align-items: center; } }
+  .finance-grid { display: grid; grid-template-columns: 1fr; gap: 24px; margin-top: 16px; }
+  @media (min-width: 640px) { .finance-grid { grid-template-columns: 1fr 1fr; align-items: start; } }
   .cargo-bay {
-    position: relative; height: 46px; border-radius: 10px; overflow: hidden;
+    position: relative; height: 36px; margin-top: 6px; border-radius: 8px; overflow: hidden;
     background:
       repeating-linear-gradient(135deg, rgba(18,18,18,0.04) 0px, rgba(18,18,18,0.04) 2px, transparent 2px, transparent 12px),
       rgba(18,18,18,0.05);
