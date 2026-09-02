@@ -34,6 +34,13 @@ const HERO_VIDEO_KEYS = [
   "DealerOS images/691950586_1788189700216226.mp4",
 ];
 
+// Preferred single hero video (pitch-spec key). Not confirmed uploaded to
+// R2 yet, so renderLandingPage checks for it with env.PHOTOS.head() at
+// request time and only uses it if it actually exists - falling back to
+// HERO_VIDEO_KEYS above otherwise. Avoids repeating the earlier hero-video
+// 404 regression from hardcoding a key that isn't there yet.
+const PRIMARY_HERO_VIDEO_KEY = "video/autoshow_hero_bg_480_noaudio.mp4";
+
 // Real floor-stock photos, uploaded directly to R2 under floor/ - these are
 // the actual cars on the actual lot right now. Used for the "From the
 // Floor" gallery so it always shows real photos, independent of which
@@ -56,8 +63,7 @@ const FLOOR_GALLERY_KEYS = [
 // browser anyway, so this starts on the visitor's first pointer/touch/click
 // instead, loops quietly, and stays user-controllable via the mute toggle
 // in the header. R2 key of a compressed mp3; leave "" to disable entirely.
-// NOTE: this key isn't confirmed uploaded to R2 yet - the toggle and player
-// are wired either way, they'll just have nothing to play until it lands.
+// Confirmed uploaded to R2.
 const AMBIENT_AUDIO_KEY = "audio/autoshow_bg_compressed.mp3";
 
 // AutoShow brand: red/black/blue/white. Keep these exact values across
@@ -640,6 +646,11 @@ async function renderLandingPage(env, url) {
   const debugMode = url.searchParams.get("debug") === "1";
   const stock = await getStock(env);
 
+  // Prefer the pitch-spec single hero video if it's actually in R2 yet;
+  // otherwise keep using the two hero clips already confirmed live.
+  const primaryVideoExists = await env.PHOTOS.head(PRIMARY_HERO_VIDEO_KEY).then((h) => !!h).catch(() => false);
+  const heroVideoKeys = primaryVideoExists ? [PRIMARY_HERO_VIDEO_KEY] : HERO_VIDEO_KEYS;
+
   const carIconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 17h14M5 17a2 2 0 100 4 2 2 0 000-4zm14 0a2 2 0 100 4 2 2 0 000-4zM5 17V9l2-5h10l2 5v8"/></svg>`;
 
   // No retouching, no stock photography - real cars on the real lot, and
@@ -689,16 +700,16 @@ async function renderLandingPage(env, url) {
   `).join("");
 
   // Full-bleed hero (same hero-stage the rest of the site already ships).
-  // Videos in HERO_VIDEO_KEYS play as a silent, crossfading, reduced-opacity
-  // background slideshow; falls back to the real floor-stock photo
-  // slideshow if no video keys are configured.
-  const heroVideoSlides = HERO_VIDEO_KEYS.map((key, i) => `
+  // Videos in heroVideoKeys play as a silent, muted, crossfading,
+  // reduced-opacity background slideshow; falls back to the real
+  // floor-stock photo slideshow if no video keys are configured.
+  const heroVideoSlides = heroVideoKeys.map((key, i) => `
     <video class="hero-video-slide${i === 0 ? " active" : ""}" muted loop playsinline preload="${i === 0 ? "auto" : "none"}"${i === 0 && heroSlides[0] ? ` poster="${heroSlides[0]}"` : ""}>
       <source src="/photos/${encodeURIComponent(key)}" type="video/mp4">
     </video>
   `).join("");
 
-  const heroMedia = HERO_VIDEO_KEYS.length
+  const heroMedia = heroVideoKeys.length
     ? `<div class="hero-video-stack">${heroVideoSlides}</div>`
     : heroSlides.length
       ? `<div class="hero-bg">
@@ -711,7 +722,10 @@ async function renderLandingPage(env, url) {
       <div class="eyebrow materialize" style="animation-delay:0.1s;">Bloemfontein &middot; Quality Used Vehicles</div>
       <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(32px,6vw,50px); margin:0 0 14px; line-height:1.08;">Quality Used Cars<br>on Brick Paving.</h1>
       <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:50ch; line-height:1.6;">Real stock, updated daily. Search below and book a time that works for you.</p>
-      <div class="finance-badge materialize" style="animation-delay:0.5s; margin-top:16px;">70% Deposit</div>
+      <div class="materialize" style="animation-delay:0.5s; margin-top:16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <div class="finance-badge">70% Deposit</div>
+        <a href="#stock" class="btn btn-primary">Find Your Car</a>
+      </div>
     </div>
   `;
 
@@ -744,7 +758,10 @@ async function renderLandingPage(env, url) {
         <div class="eyebrow materialize" style="animation-delay:0.1s;">Bloemfontein &middot; Quality Used Vehicles</div>
         <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(30px,5.4vw,44px); margin:14px 0 10px; line-height:1.1;">Quality Used Cars on Brick Paving.</h1>
         <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:56ch; line-height:1.6; color:var(--ink-soft); margin:0;">Real stock, updated daily. Selling instead? <a href="/evaluate" style="color:var(--coral); font-weight:600;">Get a trade-in value &rarr;</a></p>
-        <div class="finance-badge materialize" style="animation-delay:0.5s; margin-top:14px;">70% Deposit</div>
+        <div class="materialize" style="animation-delay:0.5s; margin-top:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+          <div class="finance-badge">70% Deposit</div>
+          <a href="#stock" class="btn btn-primary">Find Your Car</a>
+        </div>
       </div>`;
 
   const filterBar = `
