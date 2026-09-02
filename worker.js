@@ -302,17 +302,26 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
       var(--paper);
     min-height: 100vh; padding-bottom: 60px;
   }
+  /* Site header: solid near-black bar (the AutoShow "pitch site" chrome),
+     full-bleed rather than boxed, with its content constrained to the
+     usual reading width inside .header-inner. */
   header {
-    max-width: 1100px; margin: 0 auto; padding: 20px; display: flex;
-    justify-content: space-between; align-items: center;
-    position: sticky; top: 0; z-index: 20;
-    background: rgba(246,246,248,0.85); backdrop-filter: blur(14px);
+    position: sticky; top: 0; z-index: 20; background: #0A0A0A;
     border-bottom: 1px solid transparent; transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
-  header.scrolled { border-bottom-color: var(--line); box-shadow: 0 4px 20px rgba(18,18,18,0.05); }
+  header.scrolled { border-bottom-color: rgba(255,255,255,0.08); box-shadow: 0 4px 20px rgba(0,0,0,0.35); }
+  .header-inner {
+    max-width: 1100px; margin: 0 auto; padding: 16px 20px; display: flex;
+    justify-content: space-between; align-items: center;
+  }
+  /* Logo keeps its real black+red mark, so it needs a light chip behind it
+     to stay legible on the dark header rather than a white logo variant. */
+  .logo-link {
+    background: var(--paper); padding: 6px 12px; border-radius: 10px;
+  }
   nav a {
     font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.08em; color: var(--ink-soft); text-decoration: none; margin-left: 20px;
+    letter-spacing: 0.08em; color: rgba(246,246,248,0.75); text-decoration: none; margin-left: 20px;
     transition: color 0.15s ease; padding-bottom: 2px; border-bottom: 1px solid transparent;
   }
   nav a::before {
@@ -393,8 +402,8 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
   /* Ambient background audio toggle - small, unobtrusive, header-mounted. */
   .ambient-toggle {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line);
-    background: rgba(255,255,255,0.7); color: var(--ink-soft); cursor: pointer;
+    width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.9); color: var(--ink-soft); cursor: pointer;
     margin-left: 14px; transition: border-color 0.15s ease, color 0.15s ease;
   }
   .ambient-toggle:hover { border-color: var(--coral); color: var(--coral); }
@@ -591,16 +600,18 @@ ${ogUrl ? `<meta property="og:url" content="${ogUrl}">` : ""}
 <body>
 <a href="#main-content" class="skip-link">Skip to main content</a>
 <header>
-  ${logoMark()}
-  <nav aria-label="Main navigation">
-    <a href="/#stock">Stock</a>
-    <a href="/evaluate">Sell / Trade-In</a>
-    <a href="https://wa.me/${WHATSAPP_NUMBER}">WhatsApp</a>
-    <button type="button" id="ambient-toggle" class="ambient-toggle" aria-label="Toggle background sound" aria-pressed="false" title="Toggle background sound">
-      <svg class="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18 6a9 9 0 010 12"/></svg>
-      <svg class="icon-sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:none;"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M23 9l-6 6M17 9l6 6"/></svg>
-    </button>
-  </nav>
+  <div class="header-inner">
+    ${logoMark()}
+    <nav aria-label="Main navigation">
+      <a href="/#stock">Stock</a>
+      <a href="/evaluate">Sell / Trade-In</a>
+      <a href="https://wa.me/${WHATSAPP_NUMBER}">WhatsApp</a>
+      <button type="button" id="ambient-toggle" class="ambient-toggle" aria-label="Toggle background sound" aria-pressed="false" title="Toggle background sound">
+        <svg class="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18 6a9 9 0 010 12"/></svg>
+        <svg class="icon-sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:none;"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M23 9l-6 6M17 9l6 6"/></svg>
+      </button>
+    </nav>
+  </div>
 </header>
 ${AMBIENT_AUDIO_KEY ? `<audio id="ambient-audio" src="/photos/${encodeURIComponent(AMBIENT_AUDIO_KEY)}" loop preload="none"></audio>` : ""}
 <main id="main-content">${bodyContent}</main>
@@ -698,8 +709,20 @@ async function renderLandingPage(env, url) {
   const heroInner = `
     <div class="hero-text">
       <div class="eyebrow materialize" style="animation-delay:0.1s;">Bloemfontein &middot; Quality Used Vehicles</div>
-      <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(32px,6vw,50px); margin:0 0 14px; line-height:1.08;">Find your next car,<br>book a test drive today.</h1>
+      <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(32px,6vw,50px); margin:0 0 14px; line-height:1.08;">Quality Used Cars<br>on Brick Paving.</h1>
       <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:50ch; line-height:1.6;">Real stock, updated daily. Search below and book a time that works for you.</p>
+      <div class="finance-badge materialize" style="animation-delay:0.5s; margin-top:16px;">70% Deposit</div>
+    </div>
+  `;
+
+  // Bokeh orbs - soft blurred colour blobs drifting behind the hero text,
+  // reusing the same drift keyframes the diagonal wash already uses.
+  const heroBokeh = `
+    <div class="hero-bokeh" aria-hidden="true">
+      <span class="bokeh-orb bokeh-1"></span>
+      <span class="bokeh-orb bokeh-2"></span>
+      <span class="bokeh-orb bokeh-3"></span>
+      <span class="bokeh-orb bokeh-4"></span>
     </div>
   `;
 
@@ -711,6 +734,7 @@ async function renderLandingPage(env, url) {
         <div class="diagonal-accent materialize" style="animation-delay:0s;" aria-hidden="true"></div>
         <div class="hero-stage has-photos" id="hero-stage" style="min-height:420px;">
           ${heroMedia}
+          ${heroBokeh}
           <div class="hero-overlay"></div>
           <div class="hero-content" style="padding-bottom:88px;">${heroInner}</div>
         </div>
@@ -718,8 +742,9 @@ async function renderLandingPage(env, url) {
     : `<div class="hero-wrap" style="padding:44px 0 4px; position:relative;">
         <div class="diagonal-accent materialize" style="animation-delay:0s;" aria-hidden="true"></div>
         <div class="eyebrow materialize" style="animation-delay:0.1s;">Bloemfontein &middot; Quality Used Vehicles</div>
-        <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(30px,5.4vw,44px); margin:14px 0 10px; line-height:1.1;">Find your next car, book a test drive today.</h1>
+        <h1 class="materialize" style="animation-delay:0.25s; font-size:clamp(30px,5.4vw,44px); margin:14px 0 10px; line-height:1.1;">Quality Used Cars on Brick Paving.</h1>
         <p class="materialize" style="animation-delay:0.4s; font-size:16px; max-width:56ch; line-height:1.6; color:var(--ink-soft); margin:0;">Real stock, updated daily. Selling instead? <a href="/evaluate" style="color:var(--coral); font-weight:600;">Get a trade-in value &rarr;</a></p>
+        <div class="finance-badge materialize" style="animation-delay:0.5s; margin-top:14px;">70% Deposit</div>
       </div>`;
 
   const filterBar = `
@@ -979,12 +1004,25 @@ async function renderLandingPage(env, url) {
     position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
     opacity: 0; transition: opacity 1.8s ease; z-index: 0;
   }
-  .hero-video-slide.active { opacity: 0.55; z-index: 1; }
+  .hero-video-slide.active { opacity: 0.28; z-index: 1; }
 
   @keyframes drift {
     0%, 100% { transform: translate(0,0) scale(1); opacity: 0.9; }
     50% { transform: translate(-12px, 14px) scale(1.05); opacity: 1; }
   }
+
+  /* Bokeh orbs - soft, blurred colour blobs drifting behind the hero text,
+     atmosphere layered on top of the video rather than a hard graphic. */
+  .hero-bokeh { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+  .bokeh-orb {
+    position: absolute; border-radius: 50%; filter: blur(22px); opacity: 0.5;
+    animation: drift 9s ease-in-out infinite;
+  }
+  .bokeh-1 { width: 140px; height: 140px; left: 8%; top: 18%; background: radial-gradient(circle, rgba(227,30,43,0.55), transparent 70%); animation-delay: 0s; }
+  .bokeh-2 { width: 90px; height: 90px; left: 28%; top: 55%; background: radial-gradient(circle, rgba(43,99,235,0.5), transparent 70%); animation-delay: 1.4s; animation-duration: 11s; }
+  .bokeh-3 { width: 110px; height: 110px; right: 14%; top: 26%; background: radial-gradient(circle, rgba(18,62,145,0.5), transparent 70%); animation-delay: 2.8s; animation-duration: 12.5s; }
+  .bokeh-4 { width: 70px; height: 70px; right: 24%; top: 62%; background: radial-gradient(circle, rgba(227,30,43,0.4), transparent 70%); animation-delay: 0.8s; animation-duration: 8.5s; }
+  @media (prefers-reduced-motion: reduce) { .bokeh-orb { animation: none; } }
 
   /* Ethereal materialize-in for above-the-fold hero content - a soft
      dissolve from blur/scale rather than a hard cut-in. */
